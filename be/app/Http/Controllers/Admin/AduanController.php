@@ -681,25 +681,9 @@ class AduanController extends Controller
             'rated_at' => now(),
         ]);
 
-        // bukti selesai: jika rating >=4 otomatis jadi testimoni (tampilkan di frontend)
-        if ((int) $request->rating >= 4 && !empty($request->ulasan)) {
-            try {
-                \App\Models\Testimonial::firstOrCreate(
-                    ['isi_testimoni' => $request->ulasan, 'nama' => $request->user()->name],
-                    [
-                        'jabatan' => 'Warga - ' . ($item->kategori ?? 'Aduan'),
-                        'urutan' => (\App\Models\Testimonial::max('urutan') ?? 0) + 1,
-                        'is_active' => true,
-                    ]
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Gagal auto-testimoni: ' . $e->getMessage());
-            }
-        }
-
         return redirect()
             ->back()
-            ->with('success', 'Terima kasih atas penilaian Anda!' . ((int)$request->rating >=4 ? ' Ulasan Anda akan ditampilkan sebagai testimoni.' : ''));
+            ->with('success', 'Terima kasih atas penilaian Anda!');
     }
 
     /**

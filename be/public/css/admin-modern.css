@@ -2012,7 +2012,7 @@ body.overflow-y-hidden #main > * {
 }
 
 .sidenav-header .navbar-brand-img {
-    max-height: 4.25rem;
+    max-height: 3.25rem;
     width: auto;
 }
 
@@ -2229,7 +2229,7 @@ body.overflow-y-hidden #main > * {
     left: 0;
     right: 0;
     height: 300px;
-    background: var(--argon-dark);
+    background-color: #0a4d8e;
     z-index: 0;
     pointer-events: none;
 }
@@ -2246,46 +2246,27 @@ body.overflow-y-hidden #main > * {
 }
 
 body > .min-height-300 {
-    background-color: var(--argon-dark) !important;
+    background-color: #0a4d8e !important;
+    top: 0 !important;
+    left: 0 !important;
 }
 
 body > .min-height-300,
 #main::before {
-    background-image:
-        radial-gradient(
-            120% 170% at 12% -25%,
-            rgba(122, 162, 255, 0.3) 0%,
-            rgba(122, 162, 255, 0) 55%
-        ),
-        radial-gradient(
-            90% 150% at 88% -10%,
-            rgba(255, 255, 255, 0.12) 0%,
-            rgba(255, 255, 255, 0) 60%
-        ),
-        linear-gradient(115deg, #2b3a63 0%, #344767 45%, #3d4d7a 100%);
-    background-size:
-        200% 200%,
-        200% 200%,
-        220% 100%;
-    background-repeat: no-repeat, no-repeat, no-repeat;
-    background-attachment: fixed, fixed, fixed;
-    animation: argonBandShift 18s ease-in-out infinite;
+    background-image: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%);
+    background-size: auto;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    animation: none;
+}
+
+html[data-bs-theme="dark"] body > .min-height-300 {
+    background-color: #0a4d8e !important;
 }
 
 html[data-bs-theme="dark"] body > .min-height-300,
 html[data-bs-theme="dark"] #main::before {
-    background-image:
-        radial-gradient(
-            120% 170% at 12% -25%,
-            rgba(90, 120, 220, 0.26) 0%,
-            rgba(90, 120, 220, 0) 55%
-        ),
-        radial-gradient(
-            90% 150% at 88% -10%,
-            rgba(255, 255, 255, 0.08) 0%,
-            rgba(255, 255, 255, 0) 60%
-        ),
-        linear-gradient(115deg, #151a30 0%, #1a1f37 45%, #20294a 100%);
+    background-image: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%);
 }
 
 @keyframes argonBandShift {
@@ -2344,10 +2325,11 @@ body.modal-open header {
 }
 
 /* --------------------------------------------------------------------------
-   10.3 Navbar transparan di atas banner (Argon)
+   10.3 Navbar samakan dengan banner (gradient biru-tosca)
    -------------------------------------------------------------------------- */
 #main .navbar-top {
-    background: transparent !important;
+    background: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%) !important;
+    background-image: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%) !important;
     border: 0 !important;
     box-shadow: none !important;
 }

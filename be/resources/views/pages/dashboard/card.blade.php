@@ -8,9 +8,9 @@
     <script>
         window.dashboardData = {
             visitorStats: @json($visitorStats),
-            articles: {
-                total: {{ $totalArticles }},
-                published: {{ $publishedArticles }}
+            agendas: {
+                total: {{ $totalAgendas }},
+                published: {{ $publishedAgendas }}
             },
             aduanPerStatus: @json($aduanPerStatus),
             aduanKategoriLabels: @json($aduanKategoriLabels),
@@ -35,7 +35,7 @@
                 <p class="mb-0 small text-white">Ringkasan statistik pengunjung website Dinas Bina Marga dan Sumber Daya Air Kota Bekasi.</p>
             </div>
             <div class="d-flex gap-2 hero-actions">
-                <a href="{{ route('articles.create') }}" class="btn btn-light"><i class="bi bi-plus-lg me-1"></i> Tulis Berita</a>
+                <a href="{{ route('agendas.create') }}" class="btn btn-light"><i class="bi bi-plus-lg me-1"></i> Tulis Agenda</a>
                 <a href="{{ route('aduans.index') }}" class="btn btn-warning text-white"><i class="bi bi-inbox me-1"></i> Aduan ({{ $aduanTotal ?? 0 }})</a>
             </div>
         </div>
@@ -100,18 +100,18 @@
             </a>
         </div>
 
-        {{-- Total Articles --}}
+        {{-- Total Agendas --}}
         <div class="col-6 col-lg-3">
-            <a href="{{ route('articles.index') }}" class="text-decoration-none text-reset">
+            <a href="{{ route('agendas.index') }}" class="text-decoration-none text-reset">
                 <div class="card border-info shadow-sm h-100 stat-card hover-lift">
                     <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
                         <div class="stats-icon bg-light-info rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
                             <i class='bi bi-file-text-fill text-info'></i>
                         </div>
                         <div class="min-w-0">
-                            <div class="stat-label small text-truncate d-block" title="{{ $dateRangeLabel ?? '' }}">Total Berita ({{ $daysDiff ?? 30 }} hari)</div>
-                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalArticles }}</div>
-                            @include('partials.stat-trend', ['growth' => $articleGrowth, 'daysDiff' => $daysDiff ?? 30])
+                            <div class="stat-label small text-truncate d-block" title="{{ $dateRangeLabel ?? '' }}">Total Agenda ({{ $daysDiff ?? 30 }} hari)</div>
+                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalAgendas }}</div>
+                            @include('partials.stat-trend', ['growth' => $agendaGrowth, 'daysDiff' => $daysDiff ?? 30])
                         </div>
                     </div>
                 </div>
@@ -187,22 +187,6 @@
             </a>
         </div>
 
-        {{-- Agenda --}}
-        <div class="col-6 col-lg-3">
-            <a href="{{ route('agenda.index') }}" class="text-decoration-none text-reset">
-                <div class="card border-primary shadow-sm h-100 stat-card hover-lift">
-                    <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
-                        <div class="stats-icon bg-light-primary rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
-                            <i class='bi bi-calendar-event-fill text-primary'></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="stat-label small text-truncate d-block">Total Agenda</div>
-                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalEvents }}</div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
     </div>
 
     {{-- Charts Section - Tabbed --}}
@@ -277,16 +261,16 @@
                 <div class="tab-pane fade" id="tab-content">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                            <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart me-1"></i>Status Artikel</h6>
+                            <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart me-1"></i>Status Agenda</h6>
                         </div>
                         <div class="card-body p-3 pb-2 d-flex align-items-center justify-content-center">
                             <div class="d-flex justify-content-center mb-3" style="height: 180px;">
-                                <canvas id="articleStatusChart" width="180" height="180"></canvas>
+                                <canvas id="agendaStatusChart" width="180" height="180"></canvas>
                             </div>
                             <div class="row g-2 text-center w-100">
-                                <div class="col-4"><div class="fw-bold text-success">{{ $publishedArticles }}</div><div class="small text-muted">Dipublikasikan</div></div>
-                                <div class="col-4"><div class="fw-bold text-warning">{{ $totalArticles - $publishedArticles }}</div><div class="small text-muted">Draft</div></div>
-                                <div class="col-4"><div class="fw-bold text-primary">{{ $totalArticles }}</div><div class="small text-muted">Total</div></div>
+                                <div class="col-4"><div class="fw-bold text-success">{{ $publishedAgendas }}</div><div class="small text-muted">Dipublikasikan</div></div>
+                                <div class="col-4"><div class="fw-bold text-warning">{{ $totalAgendas - $publishedAgendas }}</div><div class="small text-muted">Draft</div></div>
+                                <div class="col-4"><div class="fw-bold text-primary">{{ $totalAgendas }}</div><div class="small text-muted">Total</div></div>
                             </div>
                         </div>
                     </div>
@@ -313,7 +297,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
                     <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-clock-history me-1"></i>Aktivitas Terbaru</h5>
-                    <a href="{{ route('articles.index') }}" class="small text-decoration-none fw-medium text-primary">Lihat Semua <i class="bi bi-arrow-right ms-1"></i></a>
+                    <a href="{{ route('agendas.index') }}" class="small text-decoration-none fw-medium text-primary">Lihat Semua <i class="bi bi-arrow-right ms-1"></i></a>
                 </div>
                 <div class="card-body p-3 pb-2">
                     <div class="timeline">
@@ -342,7 +326,7 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="d-grid gap-2">
-                        <a href="{{ route('articles.create') }}" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-2"></i> Tulis Berita Baru</a>
+                        <a href="{{ route('agendas.create') }}" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-2"></i> Tulis Agenda Baru</a>
                         <a href="{{ route('aduans.index') }}" class="btn btn-outline-warning text-dark"><i class="bi bi-inbox me-2"></i> Kelola Aduan</a>
                         <a href="{{ route('faq.create') }}" class="btn btn-outline-info"><i class="bi bi-question-circle me-2"></i> Tambah FAQ</a>
                         <a href="{{ route('documents.create') }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-plus me-2"></i> Upload Dokumen</a>

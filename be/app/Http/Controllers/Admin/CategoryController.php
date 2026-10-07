@@ -17,7 +17,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $categories = Category::withCount('articles')
+        $categories = Category::withCount('agendas')
             ->when($search, function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");

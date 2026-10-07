@@ -13,11 +13,10 @@ return new class extends Migration {
     private function entries(): array
     {
         return [
-            ['route' => 'articles.bulkDestroy', 'permission_name' => 'articles.destroy'],
+            ['route' => 'agendas.bulkDestroy', 'permission_name' => 'agendas.destroy'],
             ['route' => 'documents.bulkDestroy', 'permission_name' => 'documents.destroy'],
             ['route' => 'faq.bulkDestroy', 'permission_name' => 'faq.destroy'],
             ['route' => 'document-categories.bulkDestroy', 'permission_name' => 'document-categories.destroy'],
-            ['route' => 'agenda.bulkDestroy', 'permission_name' => 'agenda.destroy'],
             ['route' => 'aduans.bulkDestroy', 'permission_name' => 'aduans.destroy'],
             ['route' => 'aduans.bulkRestore', 'permission_name' => 'aduans.restore'],
             ['route' => 'security.audit-log.bulkDestroy', 'permission_name' => 'audit-log.destroy'],

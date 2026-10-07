@@ -6,7 +6,7 @@
                 <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
                     <i class="bi bi-search text-muted"></i>
                     <input type="text" id="globalSearchInput" class="form-control border-0 shadow-none"
-                        placeholder="Cari aduan, berita, dokumen, halaman, event, pengguna… (min. 2 huruf)" autocomplete="off">
+                        placeholder="Cari aduan, agenda, dokumen, halaman, event, pengguna… (min. 2 huruf)" autocomplete="off">
                     <kbd class="d-none d-md-inline-block">ESC</kbd>
                 </div>
                 <div id="globalSearchResults" class="p-2" style="max-height: 420px; overflow-y: auto;">

@@ -13,20 +13,15 @@ use App\Http\Controllers\ManagementAccess\MenuGroupController;
 use App\Http\Controllers\ManagementAccess\PermissionController;
 
 use App\Http\Controllers\Admin\FaqController;
-use App\Http\Controllers\TentangPerusahaanController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\AccountController;
-use App\Http\Controllers\Admin\ArticleController;
+use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\DocumentCategoryController;
-use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Admin\PagesController;
 use App\Http\Controllers\Admin\PollController;
-use App\Http\Controllers\Admin\TestimonialController;
-use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\AduanController;
 use App\Http\Controllers\Admin\AduanTindakLanjutController;
@@ -63,11 +58,11 @@ Route::get('/health', [HealthController::class, 'index'])->name('health');
 Route::get('/health/page', [HealthController::class, 'page'])->middleware(['auth', 'role:super-admin|admin'])->name('health.page');
 
 // Snapshot SEO server-side untuk crawler share (WhatsApp/FB/X/Telegram).
-// nginx hanya mem-proxy User-Agent bot pada /berita/{slug} ke sini;
+// nginx hanya mem-proxy User-Agent bot pada /agenda/{slug} ke sini;
 // manusia tetap ke SPA. Tanpa auth & tanpa session berat.
-Route::get('/seo/berita/{slug}', [\App\Http\Controllers\SeoSnapshotController::class, 'show'])
+Route::get('/seo/agenda/{slug}', [\App\Http\Controllers\SeoSnapshotController::class, 'show'])
     ->where('slug', '[^/]+')
-    ->name('seo.berita');
+    ->name('seo.agenda');
 
 // Wallboard TV pusat pantau (login atau ?token=WALLBOARD_TOKEN)
 Route::get('/wallboard', [WallboardController::class, 'index'])->name('wallboard');
@@ -94,6 +89,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/notifications', function (Illuminate\Http\Request $request) {
+        $query = auth()->user()->notifications()->latest();
+
+        if ($request->get('filter') === 'unread') {
+            $query->whereNull('read_at');
+        }
+
+        $notifications = $query->paginate(15)->withQueryString();
+        $unreadCount = auth()->user()->unreadNotifications()->count();
+
+        return view('pages.notifications.index', compact('notifications', 'unreadCount'));
+    })->name('notifications.index');
     // Keep-alive untuk reset timer idle (dipanggil via JS saat user klik "Tetap Login")
     Route::post('/keep-alive', function (\Illuminate\Http\Request $request) {
         $request->session()->put('last_activity', time());
@@ -128,8 +135,6 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
     Route::resource('menu.item', MenuItemController::class)->middleware($superAdmin)->only('index', 'store', 'update', 'destroy');
     Route::delete('faq/bulk', [FaqController::class, 'bulkDestroy'])->name('faq.bulkDestroy');
     Route::resource('faq', FaqController::class);
-    Route::resource('testimonial', TestimonialController::class);
-    Route::resource('company', TentangPerusahaanController::class);
     Route::get('banner/media', [BannerController::class, 'loadMore'])->name('banner.loadMore');
     Route::get('banner/foto-picker', [BannerController::class, 'fotoPicker'])->name('banner.fotoPicker');
     Route::get('banner/album-fotos/{album}', [BannerController::class, 'albumFotos'])->name('banner.albumFotos');
@@ -139,15 +144,14 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
     Route::put('banner/album/{album}', [BannerController::class, 'updateAlbum'])->name('banner.updateAlbum');
     Route::delete('banner/album/{album}', [BannerController::class, 'destroyAlbum'])->name('banner.destroyAlbum');
     Route::resource('categories', CategoryController::class);
-    Route::resource('departments', DepartmentController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::delete('articles/bulk', [ArticleController::class, 'bulkDestroy'])->name('articles.bulkDestroy');
-    Route::resource('articles', ArticleController::class);
+    Route::delete('agendas/bulk', [AgendaController::class, 'bulkDestroy'])->name('agendas.bulkDestroy');
+    Route::post('agendas/{agenda}/approve', [AgendaController::class, 'approve'])->name('agendas.approve');
+    Route::post('agendas/{agenda}/reject', [AgendaController::class, 'reject'])->name('agendas.reject');
+    Route::resource('agendas', AgendaController::class);
     Route::resource('account', AccountController::class);
     Route::get('/get-kelurahan/{kecamatan_id}', [AccountController::class, 'getKelurahan']);
     Route::resource('poll', PollController::class);
     Route::resource('pages', PagesController::class);
-    Route::delete('agenda/bulk', [AgendaController::class, 'bulkDestroy'])->name('agenda.bulkDestroy');
-    Route::resource('agenda', AgendaController::class);
     Route::delete('services/bulk', [ServiceController::class, 'bulkDestroy'])->name('services.bulkDestroy');
     Route::resource('services', ServiceController::class)->except(['show']);
     Route::get('aduans/kelurahan/{kecamatan_id}', [AduanController::class, 'getKelurahan'])->name('aduans.kelurahan');
@@ -179,8 +183,6 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
         '/kontak/{uuid}',
         [FaqController::class, 'forceDelete']
     )->name('kontak.destroy');
-    Route::resource('pegawai', PegawaiController::class);
-
     Route::patch('/pages/{uuid}/sidebar', [PagesController::class, 'updateSidebar'])->name('pages.updateSidebar');
 
     Route::prefix('security')->name('security.')->group(function () {

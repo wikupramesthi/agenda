@@ -35,7 +35,7 @@
                             <th>No.</th>
                             <th>Nama Kategori</th>
                             <th>Deskripsi</th>
-                            <th>Total Berita</th>
+                            <th>Total Agenda</th>
                             <th>Edit</th>
                             <th>Hapus</th>
                         </tr>
@@ -46,7 +46,7 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->description  }}</td>
-                            <td>{{ $item->articles_count  }}</td>
+                            <td>{{ $item->agendas_count  }}</td>
                             <td>
                                 @can('categories.update')
                                 <a data-bs-toggle="modal" data-bs-target="#modal-form-edit-categories-{{  $item->uuid }}"

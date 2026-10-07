@@ -42,7 +42,7 @@
 </head>
 
 <body>
-    <div class="min-height-300 bg-dark position-absolute w-100"></div>
+    <div class="min-height-300 position-absolute w-100" style="background: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%); top: 0; left: 0;"></div>
     <div class="app-loader" id="app-loader">
         <img src="{{ asset('img/logo.png') }}" alt="DBMSDA" class="app-loader__logo app-loader__logo--light">
         <img src="{{ asset('img/logo-white.png') }}" alt="DBMSDA" class="app-loader__logo app-loader__logo--dark">
@@ -143,7 +143,7 @@
 
     <script>
         $(document).ready(function() {
-            // Select2 generik untuk dropdown multi-pilih (mis. #departments).
+            // Select2 generik untuk dropdown multi-pilih.
             // Halaman yang memakai select2 menginisialisasinya sendiri via @push('after-script').
             $('select[data-select2]').select2({
                 width: '100%',

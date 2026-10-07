@@ -140,7 +140,7 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            'articles' => [
+            'agendas' => [
                 'searchableAttributes' => ['title', 'excerpt', 'content', 'category'],
                 'filterableAttributes' => ['status', 'is_featured', 'is_popular', 'category', 'user_name'],
                 'sortableAttributes' => ['created_at', 'updated_at', 'views'],
@@ -193,17 +193,14 @@ return [
             ],
         ],
         'model-settings' => [
-            App\Models\Article::class => [
-                'index' => 'articles',
+            App\Models\Agenda::class => [
+                'index' => 'agendas',
             ],
             App\Models\Page::class => [
                 'index' => 'pages',
             ],
             App\Models\Faq::class => [
                 'index' => 'faqs',
-            ],
-            App\Models\Event::class => [
-                'index' => 'events',
             ],
             App\Models\Document::class => [
                 'index' => 'documents',

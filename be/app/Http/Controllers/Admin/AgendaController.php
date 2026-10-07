@@ -4,175 +4,377 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\HandlesTransactions;
+use App\Http\Requests\Agenda\StoreAgendaRequest;
+use App\Http\Requests\Agenda\UpdateAgendaRequest;
 use App\Models\Agenda;
-use App\Services\HtmlSanitizer;
+use App\Models\AgendaImage;
+use App\Models\Category;
+use App\Models\User;
+use App\Notifications\AgendaApprovedNotification;
+use App\Notifications\AgendaRejectedNotification;
+use App\Notifications\AgendaSubmittedNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Services\HtmlSanitizer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class AgendaController extends Controller
 {
+    
     use HandlesTransactions;
+private const IMAGE_DISK = 'public';
 
-    public function index(Request $request)
+    private const IMAGE_DIRECTORY = 'images';
+
+    /**
+     * Admin/super-admin boleh publish langsung & menyetujui agenda OPD.
+     * Role lain (mis. opd) hanya boleh input -> status dikunci 'pending'.
+     */
+    private function isApprover(?\App\Models\User $user = null): bool
     {
-        $baseQuery = Agenda::query()
-            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
-            ->when($request->filled('tanggal_mulai'), fn($q) => $q->whereDate('tanggal', '>=', $request->tanggal_mulai))
-            ->when($request->filled('tanggal_selesai'), fn($q) => $q->whereDate('tanggal', '<=', $request->tanggal_selesai))
-            ->when($request->filled('search'), fn($q) => $q->where('judul', 'like', '%' . $request->search . '%'));
+        $user ??= auth()->user();
 
-        // Statistik dari query yang SUDAH difilter (tanpa paginasi).
+        return (bool) $user?->hasAnyRole(['super-admin', 'admin']);
+    }
+
+    /**
+     * Display a listing of the agendas.
+     */
+    public function index(Request $request): View
+    {
+        $search = $request->get('search');
+        $start_date = $request->get('start_date');
+        $end_date = $request->get('end_date');
+        $status = $request->get('status');
+        $isApprover = $this->isApprover($request->user());
+
+        $baseQuery = Agenda::query()
+            // OPD hanya melihat & mengelola agenda miliknya sendiri
+            ->when(! $isApprover, fn ($query) => $query->where('user_uuid', $request->user()->uuid))
+            ->when($start_date, fn ($query) => $query->whereDate('created_at', '>=', $start_date))
+            ->when($end_date, fn ($query) => $query->whereDate('created_at', '<=', $end_date))
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
+
+        // Statistik dihitung dari query yang SUDAH difilter (tanpa paginasi),
+        // sehingga angka pada card selalu sesuai dengan data hasil filter.
         $stats = [
             'total'     => (clone $baseQuery)->count(),
             'published' => (clone $baseQuery)->where('status', 'published')->count(),
+            'pending'   => (clone $baseQuery)->where('status', 'pending')->count(),
             'draft'     => (clone $baseQuery)->where('status', 'draft')->count(),
-            'completed' => (clone $baseQuery)->where('status', 'completed')->count(),
-            'cancelled' => (clone $baseQuery)->where('status', 'cancelled')->count(),
+            'featured'  => (clone $baseQuery)->where('is_featured', true)->count(),
+            'popular'   => (clone $baseQuery)->where('is_popular', true)->count(),
         ];
 
-        $items = $baseQuery
-            ->orderBy('tanggal', 'desc')
+        $agendas = $baseQuery
+            ->with(['user', 'category', 'images'])
+            ->latest('created_at')
             ->paginate(10)->withQueryString();
 
-        return view('pages.agenda.index', [
-            'title' => 'Agenda',
-            'items' => $items,
-            'stats' => $stats,
-            'status' => $request->status,
-            'tanggal_mulai' => $request->tanggal_mulai,
-            'tanggal_selesai' => $request->tanggal_selesai,
-        ]);
+        return view('pages.agendas.index', compact('agendas', 'stats', 'start_date', 'end_date', 'status', 'search', 'isApprover'));
     }
 
-    public function create()
+    /**
+     * Show the form for creating a new agenda.
+     */
+    public function create(): View
     {
-        return view('pages.agenda.create');
+        $categories = Category::orderBy('slug')->get();
+
+        return view('pages.agendas.create', compact('categories'));
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created agenda.
+     */
+    public function store(StoreAgendaRequest $request): RedirectResponse
     {
-        $request->validate([
-            'judul'          => 'required|string|max:255',
-            'deskripsi'      => 'required|string',
-            'gambar'         => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'tanggal'        => 'required|date',
-            'waktu_mulai'    => 'nullable|date_format:H:i',
-            'waktu_selesai'  => 'nullable|date_format:H:i|after_or_equal:waktu_mulai',
-            'lokasi'         => 'nullable|string|max:255',
-            'status'         => 'required|in:draft,published,cancelled,completed',
-        ]);
+        $validated = $request->validated();
+        $storedFiles = [];
 
-        $path = null;
+        DB::beginTransaction();
+
         try {
-            $path = $request->file('gambar')->store('agenda', 'public');
-            \Illuminate\Support\Facades\DB::beginTransaction();
-            $slug = $this->uniqueSlug($request->judul);
-            Agenda::create([
-                'judul'         => $request->judul,
-                'slug'          => $slug,
-                'deskripsi'     => HtmlSanitizer::clean($request->deskripsi),
-                'gambar'        => $path,
-                'tanggal'       => $request->tanggal,
-                'waktu_mulai'   => $request->waktu_mulai,
-                'waktu_selesai' => $request->waktu_selesai,
-                'lokasi'        => $request->lokasi,
-                'status'        => $request->status,
+            $agenda = new Agenda();
+            $agenda->user_uuid = $request->user()->uuid;
+            $validated['content'] = HtmlSanitizer::clean($validated['content']);
+            // OPD wajib lewat approval: paksa 'pending' walau form mengirim status lain
+            $status = $this->isApprover($request->user()) ? $validated['status'] : 'pending';
+            $agenda->fill([
+                'category_uuid' => $validated['category_uuid'],
+                'title'         => $validated['title'],
+                'slug'          => Str::slug($validated['title']),
+                'excerpt'       => $validated['excerpt'] ?? null,
+                'content'       => $validated['content'],
+                'scheduled_at'  => $validated['scheduled_at'] ?? now(),
+                'tagging'       => $validated['tagging'] ?? null,
+                'video'         => $validated['video'] ?? null,
+                'status'        => $status,
+                'search_engine' => $validated['search_engine'],
+                'is_featured'   => $request->boolean('is_featured'),
+                'is_popular'    => $request->boolean('is_popular'),
             ]);
-            \Illuminate\Support\Facades\DB::commit();
-            return redirect()->route('agenda.index')->with('success', 'Agenda berhasil ditambahkan.');
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            if ($path && Storage::disk('public')->exists($path)) Storage::disk('public')->delete($path);
-            return back()->withInput()->with('error', $e->getMessage());
-        }
-    }
 
-    public function show(string $uuid)
-    {
-        $item = Agenda::where('uuid', $uuid)->firstOrFail();
-        return view('pages.agenda.show', compact('item'));
-    }
-
-    public function edit(string $uuid)
-    {
-        $item = Agenda::where('uuid', $uuid)->firstOrFail();
-        return view('pages.agenda.edit', compact('item'));
-    }
-
-    public function update(Request $request, string $uuid)
-    {
-        $item = Agenda::where('uuid', $uuid)->firstOrFail();
-        $request->validate([
-            'judul'          => 'required|string|max:255',
-            'deskripsi'      => 'required|string',
-            'gambar'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'tanggal'        => 'required|date',
-            'waktu_mulai'    => 'nullable|date_format:H:i',
-            'waktu_selesai'  => 'nullable|date_format:H:i|after_or_equal:waktu_mulai',
-            'lokasi'         => 'nullable|string|max:255',
-            'status'         => 'required|in:draft,published,cancelled,completed',
-        ]);
-
-        $oldPath = $item->gambar;
-        $newPath = null;
-        try {
-            if ($request->hasFile('gambar')) {
-                $newPath = $request->file('gambar')->store('agenda', 'public');
+            if ($request->hasFile('featured_image')) {
+                $agenda->featured_image = $request->file('featured_image')->store(self::IMAGE_DIRECTORY, self::IMAGE_DISK);
+                $storedFiles[] = $agenda->featured_image;
             }
-            \Illuminate\Support\Facades\DB::beginTransaction();
-            $slug = $this->uniqueSlug($request->judul, $item->uuid);
-            $item->update([
-                'judul'         => $request->judul,
-                'slug'          => $slug,
-                'deskripsi'     => HtmlSanitizer::clean($request->deskripsi),
-                'gambar'        => $newPath ?? $oldPath,
-                'tanggal'       => $request->tanggal,
-                'waktu_mulai'   => $request->waktu_mulai,
-                'waktu_selesai' => $request->waktu_selesai,
-                'lokasi'        => $request->lokasi,
-                'status'        => $request->status,
-            ]);
-            \Illuminate\Support\Facades\DB::commit();
-            if ($newPath && $oldPath && Storage::disk('public')->exists($oldPath)) {
-                Storage::disk('public')->delete($oldPath);
+
+            $agenda->save();
+
+            // storeImages akan catat file, tapi kita track manual agar bisa rollback file jika DB gagal
+            $this->storeImages($agenda, $request, $storedFiles);
+            $this->saveSeoData($agenda, $request);
+
+            DB::commit();
+
+            // Agenda OPD (pending) -> beri tahu admin agar segera direview
+            if ($status === 'pending') {
+                $this->notifyApprovers($agenda);
             }
-            return redirect()->route('agenda.index')->with('success', 'Agenda berhasil diperbarui.');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            if ($newPath && Storage::disk('public')->exists($newPath)) Storage::disk('public')->delete($newPath);
-            return back()->withInput()->with('error', $e->getMessage());
+            DB::rollBack();
+            foreach ($storedFiles as $f) {
+                if ($f && Storage::disk(self::IMAGE_DISK)->exists($f)) {
+                    Storage::disk(self::IMAGE_DISK)->delete($f);
+                }
+            }
+            // bersihkan juga images yang sempat ter-create di DB tapi file sudah di-track
+            Log::error('Gagal menyimpan agenda: ' . $e->getMessage(), ['exception' => $e]);
+
+            return back()->withInput()->with('error', 'Gagal menyimpan agenda. Silakan coba lagi.');
         }
+
+        return redirect()->route('agendas.index')->with('success', $this->isApprover($request->user()) ? 'Agenda berhasil disimpan.' : 'Agenda dikirim dan menunggu persetujuan admin.');
     }
 
-    public function destroy(string $uuid)
+    /**
+     * Display the specified agenda.
+     */
+    public function show(string $slug): View
     {
-        $item = Agenda::where('uuid', $uuid)->firstOrFail();
-        $path = $item->gambar;
-        \Illuminate\Support\Facades\DB::beginTransaction();
+        $agenda = Agenda::with('images')->where('slug', $slug)->firstOrFail();
+
+        $sessionKey = 'agenda_viewed_' . $agenda->uuid;
+
+        if (! session()->has($sessionKey)) {
+            $agenda->incrementViews();
+            session()->put($sessionKey, true);
+        }
+
+        return view('agendas.show', compact('agenda'));
+    }
+
+    /**
+     * Show the form for editing the specified agenda.
+     */
+    public function edit(Agenda $agenda): View
+    {
+        // OPD hanya boleh ubah agenda miliknya sendiri
+        if (! $this->isApprover() && $agenda->user_uuid !== auth()->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke agenda ini.');
+        }
+
+        $categories = Category::orderBy('slug')->get();
+        $agenda->load('images');
+
+        return view('pages.agendas.edit', compact('agenda', 'categories'));
+    }
+
+    /**
+     * Update the specified agenda.
+     */
+    public function update(UpdateAgendaRequest $request, Agenda $agenda): RedirectResponse
+    {
+        // OPD hanya boleh ubah agenda miliknya sendiri; edit OPD kembali ke 'pending'
+        if (! $this->isApprover($request->user()) && $agenda->user_uuid !== $request->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke agenda ini.');
+        }
+
+        $validated = $request->validated();
+        $oldFeatured = $agenda->featured_image;
+        $newFeatured = null;
+        $storedFiles = [];
+        $removedImagePaths = [];
+
+        DB::beginTransaction();
+
         try {
-            $item->delete();
-            \Illuminate\Support\Facades\DB::commit();
-            if ($path && Storage::disk('public')->exists($path)) Storage::disk('public')->delete($path);
-            return back()->with('success', 'Agenda berhasil dihapus.');
+            $validated['content'] = HtmlSanitizer::clean($validated['content']);
+            if ($request->hasFile('featured_image')) {
+                $newFeatured = $request->file('featured_image')->store(self::IMAGE_DIRECTORY, self::IMAGE_DISK);
+                $storedFiles[] = $newFeatured;
+                $agenda->featured_image = $newFeatured;
+            }
+
+            // OPD yang mengubah agenda (miliknya) otomatis kembali antre approval
+            $status = $this->isApprover($request->user()) ? $validated['status'] : 'pending';
+
+            $agenda->fill([
+                'category_uuid' => $validated['category_uuid'],
+                'title'         => $validated['title'],
+                'slug'          => Str::slug($validated['title']),
+                'excerpt'       => $validated['excerpt'] ?? null,
+                'content'       => $validated['content'],
+                'scheduled_at'  => $validated['scheduled_at'] ?? $agenda->scheduled_at ?? now(),
+                'tagging'       => $validated['tagging'] ?? null,
+                'video'         => $validated['video'] ?? null,
+                'status'        => $status,
+                'search_engine' => $validated['search_engine'],
+                'is_featured'   => $request->boolean('is_featured'),
+                'is_popular'    => $request->boolean('is_popular'),
+            ])->save();
+
+            // kumpulkan path yang akan dihapus dulu, hapus file setelah commit
+            $removeUuids = (array) $request->input('remove_images', []);
+            if (!empty($removeUuids)) {
+                $removedImagePaths = $agenda->images()->whereIn('uuid', $removeUuids)->pluck('image_path')->all();
+                $agenda->images()->whereIn('uuid', $removeUuids)->delete();
+            }
+            $this->storeImages($agenda, $request, $storedFiles);
+            $this->saveSeoData($agenda, $request);
+
+            DB::commit();
+
+            // Edit OPD kembali pending -> beri tahu admin agar direview ulang
+            if ($status === 'pending' && ! $this->isApprover($request->user())) {
+                $this->notifyApprovers($agenda);
+            }
+            // baru hapus file lama setelah DB sukses (atomic)
+            if ($newFeatured && $oldFeatured && $oldFeatured !== $newFeatured) {
+                $this->deleteFile($oldFeatured);
+            }
+            foreach ($removedImagePaths as $p) {
+                $this->deleteFile($p);
+            }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return back()->with('error', $e->getMessage());
+            DB::rollBack();
+            foreach ($storedFiles as $f) {
+                if ($f && Storage::disk(self::IMAGE_DISK)->exists($f)) {
+                    Storage::disk(self::IMAGE_DISK)->delete($f);
+                }
+            }
+            Log::error('Gagal memperbarui agenda: ' . $e->getMessage(), ['exception' => $e]);
+
+            return back()->withInput()->with('error', 'Gagal memperbarui agenda. Silakan coba lagi.');
         }
+
+        return redirect()->route('agendas.index')->with('success', $this->isApprover($request->user()) ? 'Agenda berhasil diperbarui.' : 'Perubahan dikirim dan menunggu persetujuan admin.');
     }
 
-    private function uniqueSlug(string $judul, ?string $ignoreUuid = null): string
+    /**
+     * Kirim notifikasi ke admin/super-admin (kecuali penulis sendiri).
+     */
+    private function notifyApprovers(Agenda $agenda): void
     {
-        $base = Str::slug($judul);
-        $slug = $base;
-        $i = 1;
-        while (Agenda::where('slug', $slug)->when($ignoreUuid, fn($q) => $q->where('uuid', '!=', $ignoreUuid))->exists()) {
-            $slug = $base . '-' . $i++;
+        try {
+            $approvers = User::role(['super-admin', 'admin'])
+                ->where('uuid', '!=', $agenda->user_uuid)
+                ->get();
+
+            foreach ($approvers as $approver) {
+                $approver->notify(new AgendaSubmittedNotification(
+                    $agenda->title,
+                    $agenda->user?->name ?? 'OPD',
+                    $agenda->uuid,
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notifikasi agenda ke admin: ' . $e->getMessage());
         }
-        return $slug;
     }
 
-    public function bulkDestroy(Request $request)
+    /**
+     * Kirim notifikasi hasil review ke penulis agenda.
+     */
+    private function notifyAuthor(Agenda $agenda, object $notification): void
+    {
+        try {
+            $author = $agenda->user;
+
+            if ($author) {
+                $author->notify($notification);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notifikasi agenda ke penulis: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Setujui agenda OPD (pending -> published). Khusus admin.
+     */
+    public function approve(Agenda $agenda): RedirectResponse
+    {
+        if ($agenda->status !== 'pending') {
+            return back()->with('error', 'Hanya agenda berstatus pending yang bisa disetujui.');
+        }
+
+        $agenda->update(['status' => 'published']);
+
+        $this->notifyAuthor($agenda, new AgendaApprovedNotification($agenda->title, $agenda->uuid));
+
+        return back()->with('success', "Agenda \"{$agenda->title}\" disetujui dan dipublikasikan.");
+    }
+
+    /**
+     * Tolak agenda OPD (pending -> draft). Khusus admin.
+     */
+    public function reject(Agenda $agenda): RedirectResponse
+    {
+        if ($agenda->status !== 'pending') {
+            return back()->with('error', 'Hanya agenda berstatus pending yang bisa ditolak.');
+        }
+
+        $agenda->update(['status' => 'draft']);
+
+        $this->notifyAuthor($agenda, new AgendaRejectedNotification($agenda->title, $agenda->uuid));
+
+        return back()->with('success', "Agenda \"{$agenda->title}\" dikembalikan sebagai draft.");
+    }
+
+    /**
+     * Remove the specified agenda along with its files.
+     */
+    public function destroy(Agenda $agenda): RedirectResponse
+    {
+        $featured = $agenda->featured_image;
+        $imagePaths = $agenda->images()->pluck('image_path')->all();
+
+        DB::beginTransaction();
+
+        try {
+            $agenda->images()->delete();
+            $agenda->delete();
+
+            DB::commit();
+            // hapus file setelah DB commit (atomic)
+            $this->deleteFile($featured);
+            foreach ($imagePaths as $p) {
+                $this->deleteFile($p);
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Gagal menghapus agenda: ' . $e->getMessage(), ['exception' => $e]);
+
+            return back()->with('error', 'Gagal menghapus agenda. Silakan coba lagi.');
+        }
+
+        return back()->with('success', 'Agenda berhasil dihapus.');
+    }
+
+    /**
+     * Remove the selected agendas along with their files.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
     {
         $ids = $request->input('ids', []);
 
@@ -181,25 +383,112 @@ class AgendaController extends Controller
         }
 
         $ids = array_slice(array_values(array_unique(array_filter($ids))), 0, 100);
-        $items = Agenda::whereIn('uuid', $ids)->get();
 
-        if ($items->isEmpty()) {
+        $agendas = Agenda::with('images')->whereIn('uuid', $ids)->get();
+
+        if ($agendas->isEmpty()) {
             return back()->with('error', 'Data yang dipilih tidak ditemukan.');
         }
 
-        $paths = $items->pluck('gambar')->filter()->all();
-
-        \Illuminate\Support\Facades\DB::beginTransaction();
-        try {
-            Agenda::whereIn('uuid', $items->pluck('uuid')->all())->delete();
-            \Illuminate\Support\Facades\DB::commit();
-            foreach ($paths as $path) {
-                if (Storage::disk('public')->exists($path)) Storage::disk('public')->delete($path);
+        $filePaths = [];
+        foreach ($agendas as $agenda) {
+            if ($agenda->featured_image) {
+                $filePaths[] = $agenda->featured_image;
             }
-            return back()->with('success', $items->count() . ' agenda berhasil dihapus.');
+            foreach ($agenda->images as $image) {
+                $filePaths[] = $image->image_path;
+            }
+        }
+
+        DB::beginTransaction();
+
+        try {
+            AgendaImage::whereIn('agenda_uuid', $agendas->pluck('uuid')->all())->delete();
+            Agenda::whereIn('uuid', $agendas->pluck('uuid')->all())->delete();
+
+            DB::commit();
+
+            // hapus file setelah DB commit (atomic)
+            foreach ($filePaths as $path) {
+                $this->deleteFile($path);
+            }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return back()->with('error', $e->getMessage());
+            DB::rollBack();
+            Log::error('Gagal menghapus agenda terpilih: ' . $e->getMessage(), ['exception' => $e]);
+
+            return back()->with('error', 'Gagal menghapus agenda terpilih. Silakan coba lagi.');
+        }
+
+        return back()->with('success', $agendas->count() . ' agenda berhasil dihapus.');
+    }
+
+    /**
+     * Store the uploaded slider photos for the given agenda.
+     */
+    private function storeImages(Agenda $agenda, Request $request, array &$storedFiles = []): void
+    {
+        if (! $request->hasFile('images')) {
+            return;
+        }
+
+        $order = (int) $agenda->images()->max('sort_order');
+
+        foreach ($request->file('images') as $file) {
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
+
+            $path = $file->store(self::IMAGE_DIRECTORY, self::IMAGE_DISK);
+            $storedFiles[] = $path;
+            $agenda->images()->create([
+                'image_path' => $path,
+                'sort_order' => ++$order,
+            ]);
+        }
+    }
+
+    /**
+     * Delete the selected slider photos along with their files.
+     *
+     * @param  array<int, string>  $uuids
+     */
+    private function removeImages(Agenda $agenda, array $uuids): void
+    {
+        if (empty($uuids)) {
+            return;
+        }
+
+        $agenda->images()
+            ->whereIn('uuid', $uuids)
+            ->get()
+            ->each(function (AgendaImage $image) {
+                $this->deleteFile($image->image_path);
+                $image->delete();
+            });
+    }
+
+    /**
+     * Persist the SEO metadata for the given agenda.
+     */
+    private function saveSeoData(Agenda $agenda, Request $request): void
+    {
+        $agenda->seo()->updateOrCreate([], [
+            'title'         => $agenda->title,
+            'description'   => $agenda->excerpt,
+            'image'         => $agenda->featured_image,
+            'author'        => $request->user()->name,
+            'robots'        => $agenda->search_engine ?? 'index, follow',
+            'canonical_url' => route('agendas.show', $agenda->slug),
+        ]);
+    }
+
+    /**
+     * Delete a stored file when it exists.
+     */
+    private function deleteFile(?string $path): void
+    {
+        if ($path && Storage::disk(self::IMAGE_DISK)->exists($path)) {
+            Storage::disk(self::IMAGE_DISK)->delete($path);
         }
     }
 }

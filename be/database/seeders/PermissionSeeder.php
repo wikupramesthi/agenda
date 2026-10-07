@@ -80,12 +80,6 @@ class PermissionSeeder extends Seeder
             'website-menu-item.edit',
             'website-menu-item.update',
             'website-menu-item.destroy',
-
-            // Agenda (pengganti Event)
-            'agenda.index',
-            'agenda.store',
-            'agenda.update',
-            'agenda.destroy',
         ];
 
         foreach ($permissions as $permission) {

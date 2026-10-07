@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Str;
-use App\Models\Department;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 
@@ -33,7 +32,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'uuid',
         'avatar',
         'name',
-        'nip',
         'password',
         'email_verified_at',
         'email',
@@ -45,11 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'tanggal_lahir',
         'jenis_kelamin',
         'agama',
-        'is_pejabat',
         'is_active',
-        'urutan_pejabat',
-        'unit_kerja',
-        'riwayat',
         'sumber_informasi',
     ];
 
@@ -114,17 +108,5 @@ class User extends Authenticatable implements MustVerifyEmail
     public function kelurahan()
     {
         return $this->belongsTo(Kelurahan::class);
-    }
-
-    public function departments()
-    {
-        return $this->belongsToMany(
-            Department::class,
-            'user_department',
-            'user_uuid',
-            'department_uuid',
-            'uuid',
-            'uuid'
-        )->using(UserDepartment::class)->withTimestamps();
     }
 }

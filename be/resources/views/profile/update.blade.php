@@ -503,7 +503,7 @@
                                 </h5>
 
                                 <small class="text-muted">
-                                    Jabatan, unit kerja, dan status kepegawaian Anda.
+                                    Status keaktifan akun Anda.
                                 </small>
                             </div>
 
@@ -514,125 +514,6 @@
 
 
                         <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="departments"
-                                    class="form-label fw-medium">
-                                    Jabatan / Department
-                                    <span class="text-danger">*</span>
-                                </label>
-
-                                @php
-                                $selectedDepartments = old(
-                                'departments',
-                                $user->departments?->pluck('uuid')?->toArray() ?? []
-                                );
-                                @endphp
-
-                                <select
-                                    class="form-select"
-                                    id="departments"
-                                    name="departments[]"
-                                    multiple
-                                    required
-                                    data-placeholder="Pilih jabatan...">
-
-                                    @foreach ($departments as $department)
-
-                                    <option
-                                        value="{{ $department->uuid }}"
-                                        {{ in_array($department->uuid, $selectedDepartments) ? 'selected' : '' }}>
-                                        {{ $department->name }}
-                                    </option>
-
-                                    @endforeach
-
-                                </select>
-
-                                <small class="text-muted">
-                                    Dapat memilih lebih dari satu jabatan.
-                                </small>
-
-                                @error('departments')
-                                <div class="text-danger small mt-1">
-                                    {{ $message }}
-                                </div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="unit_kerja" class="form-label fw-medium">
-                                    Unit Kerja
-                                </label>
-
-                                <input
-                                    class="form-control @error('unit_kerja') is-invalid @enderror"
-                                    id="unit_kerja"
-                                    type="text"
-                                    name="unit_kerja"
-                                    value="{{ old('unit_kerja', $user->unit_kerja) }}"
-                                    placeholder="Contoh: Bidang Sumber Daya Air">
-
-                                @error('unit_kerja')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                                @enderror
-                            </div>
-                        </div>
-
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium d-block">
-                                    Status Pejabat
-                                </label>
-
-                                <div class="form-check form-switch">
-                                    <input
-                                        class="form-check-input @error('is_pejabat') is-invalid @enderror"
-                                        type="checkbox"
-                                        role="switch"
-                                        id="is_pejabat"
-                                        name="is_pejabat"
-                                        value="1"
-                                        {{ old('is_pejabat', $user->is_pejabat) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_pejabat">
-                                        Pejabat
-                                    </label>
-                                </div>
-
-                                <small class="text-muted">
-                                    Aktifkan jika Anda menjabat sebagai pejabat (1 = Ya, 0 = Tidak).
-                                </small>
-
-                                @error('is_pejabat')
-                                <div class="text-danger small mt-1">
-                                    {{ $message }}
-                                </div>
-                                @enderror
-
-                                <div id="urutan-pejabat-wrap" class="mt-3 {{ old('is_pejabat', $user->is_pejabat) ? '' : 'd-none' }}">
-                                    <label for="urutan_pejabat" class="form-label fw-medium">
-                                        Urutan Pejabat
-                                    </label>
-
-                                    <input
-                                        class="form-control @error('urutan_pejabat') is-invalid @enderror"
-                                        id="urutan_pejabat"
-                                        type="number"
-                                        name="urutan_pejabat"
-                                        min="1"
-                                        value="{{ old('urutan_pejabat', $user->urutan_pejabat) }}"
-                                        placeholder="Contoh: 1">
-
-                                    @error('urutan_pejabat')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </div>
-                            </div>
-
                             <div class="col-md-6">
                                 <label class="form-label fw-medium d-block">
                                     Status Akun
@@ -664,26 +545,6 @@
                                 </div>
                                 @enderror
                             </div>
-                        </div>
-
-
-                        <div class="mb-4">
-                            <label for="riwayat" class="form-label fw-medium">
-                                Riwayat
-                            </label>
-
-                            <textarea
-                                class="form-control summernote @error('riwayat') is-invalid @enderror"
-                                id="riwayat"
-                                name="riwayat"
-                                rows="4"
-                                placeholder="Tulis riwayat jabatan, pengalaman, atau profil singkat...">{{ old('riwayat', $user->riwayat) }}</textarea>
-
-                            @error('riwayat')
-                            <div class="text-danger small mt-1">
-                                {{ $message }}
-                            </div>
-                            @enderror
                         </div>
 
 
@@ -759,24 +620,6 @@
                     kelSelect.innerHTML = '<option value="">Gagal memuat kelurahan</option>';
                 });
         });
-
-        // Select2 untuk department (multi-pilih jabatan)
-        if (window.jQuery && window.jQuery('#departments').length) {
-            window.jQuery('#departments').select2({
-                placeholder: window.jQuery('#departments').data('placeholder') || 'Pilih jabatan...',
-                width: '100%',
-                closeOnSelect: false
-            });
-        }
-
-        // Tampilkan input urutan hanya saat status pejabat aktif
-        const pejabatSwitch = document.getElementById('is_pejabat');
-        const urutanWrap = document.getElementById('urutan-pejabat-wrap');
-        if (pejabatSwitch && urutanWrap) {
-            pejabatSwitch.addEventListener('change', function() {
-                urutanWrap.classList.toggle('d-none', !this.checked);
-            });
-        }
     });
 </script>
 @endpush

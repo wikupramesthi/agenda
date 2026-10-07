@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Agenda;
 use App\Models\Album;
-use App\Models\Article;
+use App\Models\Agenda;
 use App\Models\WebsiteIdentity;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\URL;
@@ -18,7 +17,7 @@ class SitemapController extends Controller
         // Static routes - prioritized for SEO
         $static = [
             ['loc' => '/', 'freq' => 'daily', 'prio' => '1.0'],
-            ['loc' => '/berita', 'freq' => 'daily', 'prio' => '0.9'],
+            ['loc' => '/agenda', 'freq' => 'daily', 'prio' => '0.9'],
             ['loc' => '/layanan', 'freq' => 'weekly', 'prio' => '0.8'],
             ['loc' => '/visi-misi', 'freq' => 'monthly', 'prio' => '0.8'],
             ['loc' => '/dokumen', 'freq' => 'weekly', 'prio' => '0.7'],
@@ -45,32 +44,19 @@ class SitemapController extends Controller
             $urls[] = $this->urlEntry($base . $s['loc'], $today, $s['freq'], $s['prio']);
         }
 
-        // Dynamic: Articles (berita) - published & indexable
+        // Dynamic: Agenda - published & indexable
         try {
-            $articles = Article::where('status', 'published')
+            $agendas = Agenda::where('status', 'published')
                 ->where('search_engine', 'index')
                 ->orderByDesc('updated_at')
                 ->limit(500)
                 ->get(['slug', 'updated_at']);
-            foreach ($articles as $a) {
+            foreach ($agendas as $a) {
                 $lastmod = $a->updated_at ? $a->updated_at->toDateString() : $today;
-                $urls[] = $this->urlEntry($base . '/berita/' . rawurlencode($a->slug), $lastmod, 'weekly', '0.6');
+                $urls[] = $this->urlEntry($base . '/agenda/' . rawurlencode($a->slug), $lastmod, 'weekly', '0.6');
             }
         } catch (\Throwable $e) {
             // silent
-        }
-
-        // Dynamic: Agenda
-        try {
-            $agendas = Agenda::where('status', 'published')
-                ->orderByDesc('updated_at')
-                ->limit(200)
-                ->get(['slug', 'updated_at']);
-            foreach ($agendas as $ag) {
-                $lastmod = $ag->updated_at ? $ag->updated_at->toDateString() : $today;
-                $urls[] = $this->urlEntry($base . '/agenda/' . rawurlencode($ag->slug), $lastmod, 'weekly', '0.5');
-            }
-        } catch (\Throwable $e) {
         }
 
         // Dynamic: Album galeri

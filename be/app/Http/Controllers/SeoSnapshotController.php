@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
+use App\Models\Agenda;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -12,9 +12,9 @@ use Illuminate\Http\Response;
  *
  * Latar: frontend adalah SPA statis — meta OG yang dipasang via JS
  * (NewsDetailPage) tidak terbaca crawler karena mereka tidak mengeksekusi
- * JavaScript. nginx mendeteksi User-Agent bot pada path /berita/{slug}
+ * JavaScript. nginx mendeteksi User-Agent bot pada path /agenda/{slug}
  * dan mem-proxy request itu ke endpoint ini, sehingga HTML mentah sudah
- * memuat og:title / og:description / og:image yang sesuai berita.
+ * memuat og:title / og:description / og:image yang sesuai agenda.
  *
  * Catatan: sengaja TIDAK memanggil incrementViews() agar hitungan
  * dibaca tidak terdongkrak oleh bot.
@@ -35,18 +35,18 @@ class SeoSnapshotController extends Controller
     public function show(Request $request, string $slug): Response
     {
         $base = $request->getSchemeAndHttpHost();
-        $canonical = $base . '/berita/' . rawurlencode($slug);
+        $canonical = $base . '/agenda/' . rawurlencode($slug);
 
-        $article = Article::query()
+        $agenda = Agenda::query()
             ->with(['user', 'category', 'images'])
             ->where('slug', $slug)
             ->first();
 
-        if (! $article) {
-            return response()->view('seo.article', [
-                'title' => 'Berita tidak ditemukan',
-                'heading' => 'Berita tidak ditemukan',
-                'description' => 'Tautan yang Anda buka tidak mengarah ke artikel mana pun.',
+        if (! $agenda) {
+            return response()->view('seo.agenda', [
+                'title' => 'Agenda tidak ditemukan',
+                'heading' => 'Agenda tidak ditemukan',
+                'description' => 'Tautan yang Anda buka tidak mengarah ke agenda mana pun.',
                 'canonical' => $canonical,
                 'image' => $base . '/assets/logo.png',
                 'publishedAt' => null,
@@ -57,7 +57,7 @@ class SeoSnapshotController extends Controller
                 'jsonLd' => json_encode([
                     '@context' => 'https://schema.org',
                     '@type' => 'WebPage',
-                    'name' => 'Berita tidak ditemukan',
+                    'name' => 'Agenda tidak ditemukan',
                     'url' => $canonical,
                 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'robots' => 'noindex, follow',
@@ -68,28 +68,28 @@ class SeoSnapshotController extends Controller
         $plain = trim(preg_replace(
             '/\s+/u',
             ' ',
-            html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], "\n", (string) $article->content)), ENT_QUOTES, 'UTF-8')
+            html_entity_decode(strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], "\n", (string) $agenda->content)), ENT_QUOTES, 'UTF-8')
         ) ?: '');
 
         $description = mb_substr(
-            trim((string) ($article->excerpt ?: $plain ?: $article->title)),
+            trim((string) ($agenda->excerpt ?: $plain ?: $agenda->title)),
             0,
             200
         );
 
-        $image = $this->absoluteImage($base, $article->featured_image)
-            ?? $this->firstGalleryImage($base, $article)
+        $image = $this->absoluteImage($base, $agenda->featured_image)
+            ?? $this->firstGalleryImage($base, $agenda)
             ?? $base . '/assets/logo.png';
 
-        $publishedAt = $article->created_at?->toIso8601String();
-        $dateLabel = $article->created_at?->translatedFormat('l, d F Y') ?? '';
+        $publishedAt = $agenda->created_at?->toIso8601String();
+        $dateLabel = $agenda->created_at?->translatedFormat('l, d F Y') ?? '';
 
         $paragraphs = array_values(array_filter(array_map(
             fn (string $line): string => trim(preg_replace('/\s+/u', ' ', $line)),
             preg_split('/\R+/', str_replace(
                 ['<br>', '<br/>', '<br />', '</p>', '</li>', '</h1>', '</h2>', '</h3>', '</h4>', '</h5>', '</h6>'],
                 "\n",
-                html_entity_decode(strip_tags((string) $article->content, '<br><p><li><h1><h2><h3><h4><h5><h6>'), ENT_QUOTES, 'UTF-8')
+                html_entity_decode(strip_tags((string) $agenda->content, '<br><p><li><h1><h2><h3><h4><h5><h6>'), ENT_QUOTES, 'UTF-8')
             )) ?: []
         )));
         $paragraphs = array_slice($paragraphs, 0, 6);
@@ -99,11 +99,11 @@ class SeoSnapshotController extends Controller
         $jsonLd = json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'NewsArticle',
-            'headline' => $article->title,
+            'headline' => $agenda->title,
             'description' => $description,
             'image' => [$image],
             'datePublished' => $publishedAt,
-            'author' => ['@type' => 'Organization', 'name' => $article->user?->name ?? 'Admin'],
+            'author' => ['@type' => 'Organization', 'name' => $agenda->user?->name ?? 'Admin'],
             'publisher' => [
                 '@type' => 'Organization',
                 'name' => $siteName,
@@ -112,16 +112,16 @@ class SeoSnapshotController extends Controller
             'mainEntityOfPage' => $canonical,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return response()->view('seo.article', [
-            'title' => $article->title,
-            'heading' => $article->title,
+        return response()->view('seo.agenda', [
+            'title' => $agenda->title,
+            'heading' => $agenda->title,
             'description' => $description,
             'canonical' => $canonical,
             'image' => $image,
             'publishedAt' => $publishedAt,
             'dateLabel' => $dateLabel,
-            'author' => $article->user?->name,
-            'section' => $article->category?->name,
+            'author' => $agenda->user?->name,
+            'section' => $agenda->category?->name,
             'paragraphs' => $paragraphs,
             'jsonLd' => $jsonLd,
             'robots' => 'index, follow',
@@ -153,9 +153,9 @@ class SeoSnapshotController extends Controller
         return $base . $path;
     }
 
-    private function firstGalleryImage(string $base, Article $article): ?string
+    private function firstGalleryImage(string $base, Agenda $agenda): ?string
     {
-        $first = $article->images->first();
+        $first = $agenda->images->first();
         if (! $first || empty($first->image_path)) {
             return null;
         }

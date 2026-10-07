@@ -8,7 +8,7 @@ window.dashboardData = window.dashboardData || {};
 // ============ CHART INSTANCES ============
 let visitorChart = null;
 let deviceChart = null;
-let articleStatusChart = null;
+let agendaStatusChart = null;
 let aduanStatusChart = null;
 let aduanKategoriChart = null;
 let aduanTrenChart = null;
@@ -106,17 +106,17 @@ async function createDeviceChart() {
     }
 }
 
-// ============ ARTICLE STATUS CHART ============
-function createArticleStatusChart() {
-    const data = window.dashboardData.articles;
+// ============ AGENDA STATUS CHART ============
+function createAgendaStatusChart() {
+    const data = window.dashboardData.agendas;
     if (!data) return;
 
-    articleStatusChart = destroyChart(articleStatusChart);
+    agendaStatusChart = destroyChart(agendaStatusChart);
 
-    const ctx = getCanvas('articleStatusChart');
+    const ctx = getCanvas('agendaStatusChart');
     if (!ctx) return;
 
-    articleStatusChart = new Chart(ctx, {
+    agendaStatusChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Dipublikasikan', 'Draft'],
@@ -295,7 +295,7 @@ function initDashboardCharts() {
 
     createVisitorChart('daily');
     createDeviceChart();
-    createArticleStatusChart();
+    createAgendaStatusChart();
     createAduanStatusChart();
     createAduanKategoriChart();
     createAduanTrenChart();
@@ -306,7 +306,7 @@ window.switchVisitorChart = switchVisitorChart;
 
 // Re-render charts when bootstrap tab becomes visible (hidden canvas has 0 size otherwise)
 function refreshVisibleCharts() {
-    [visitorChart, deviceChart, articleStatusChart, aduanStatusChart, aduanKategoriChart, aduanTrenChart].forEach(function(c) {
+    [visitorChart, deviceChart, agendaStatusChart, aduanStatusChart, aduanKategoriChart, aduanTrenChart].forEach(function(c) {
         if (c && typeof c.resize === 'function') { try { c.resize(); c.update(); } catch(e) {} }
     });
 }

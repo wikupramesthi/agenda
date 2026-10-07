@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agenda;
-use App\Models\Article;
 use App\Models\Page;
 use App\Models\Faq;
 use App\Models\Document;
@@ -18,7 +17,7 @@ class SearchController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = trim((string) $request->get('q', ''));
-        $types = $request->get('types', ['article', 'page', 'faq', 'agenda', 'document', 'category', 'aduan']);
+        $types = $request->get('types', ['agenda', 'page', 'faq', 'document', 'category', 'aduan']);
         $limit = min((int) $request->get('limit', 10), 50);
         $filters = $request->get('filters', []);
 
@@ -34,10 +33,10 @@ class SearchController extends Controller
         $total = 0;
 
         $modelMap = [
-            'article' => [
-                'model' => Article::class,
-                'label' => 'Artikel',
-                'route' => 'articles.show',
+            'agenda' => [
+                'model' => Agenda::class,
+                'label' => 'Agenda',
+                'route' => 'agendas.show',
                 'icon' => 'bi-newspaper',
             ],
             'page' => [
@@ -51,18 +50,6 @@ class SearchController extends Controller
                 'label' => 'FAQ',
                 'route' => 'faqs.show',
                 'icon' => 'bi-question-circle',
-            ],
-            'agenda' => [
-                'model' => Agenda::class,
-                'label' => 'Agenda',
-                'route' => 'agenda.show',
-                'icon' => 'bi-calendar-event',
-            ],
-            'event' => [
-                'model' => Agenda::class,
-                'label' => 'Agenda',
-                'route' => 'agenda.show',
-                'icon' => 'bi-calendar-event',
             ],
             'document' => [
                 'model' => Document::class,
@@ -157,16 +144,14 @@ class SearchController extends Controller
         }
 
         $suggestions = [];
-        $types = ['article', 'page', 'faq', 'agenda', 'document', 'category'];
+        $types = ['agenda', 'page', 'faq', 'document', 'category'];
 
         foreach ($types as $type) {
             try {
                 $modelClass = match ($type) {
-                    'article' => Article::class,
+                    'agenda' => Agenda::class,
                     'page' => Page::class,
                     'faq' => Faq::class,
-                    'agenda' => Agenda::class,
-                    'event' => Agenda::class,
                     'document' => Document::class,
                     'category' => Category::class,
                     default => null,
@@ -210,13 +195,11 @@ class SearchController extends Controller
     private function getSubtitle($item, string $type): string
     {
         return match ($type) {
-            'article' => $item->category?->name ?? ucfirst($item->status ?? 'draft'),
+            'agenda' => $item->category?->name ?? ucfirst($item->status ?? 'draft'),
             'page' => $item->is_published ? 'Dipublikasikan' : 'Draft',
             'faq' => ucfirst($item->status ?? 'active'),
-            'agenda' => ucfirst($item->status ?? '-'),
-            'event' => ucfirst($item->status ?? '-'),
             'document' => $item->category?->name ?? ucfirst($item->status ?? '-'),
-            'category' => $item->articles_count . ' artikel',
+            'category' => $item->agendas_count . ' agenda',
             'aduan' => $item->kategori . ' • ' . ucfirst($item->status),
             default => '',
         };
@@ -234,18 +217,10 @@ class SearchController extends Controller
     private function getMetadata($item, string $type): array
     {
         return match ($type) {
-            'article' => [
+            'agenda' => [
                 'views' => $item->views ?? 0,
                 'is_featured' => $item->is_featured ?? false,
                 'published_at' => $item->created_at?->toISOString(),
-            ],
-            'agenda' => [
-                'tanggal' => $item->tanggal?->toDateString(),
-                'lokasi' => $item->lokasi,
-            ],
-            'event' => [
-                'tanggal' => $item->tanggal?->toDateString(),
-                'lokasi' => $item->lokasi,
             ],
             'document' => [
                 'file_size' => $item->file_size ?? null,
@@ -263,11 +238,9 @@ class SearchController extends Controller
     private function getRoute(string $type): string
     {
         return match ($type) {
-            'article' => 'articles.show',
+            'agenda' => 'agendas.show',
             'page' => 'pages.show',
             'faq' => 'faqs.show',
-            'agenda' => 'agenda.show',
-            'event' => 'agenda.show',
             'document' => 'documents.show',
             'category' => 'categories.show',
             'aduan' => 'aduan.track',

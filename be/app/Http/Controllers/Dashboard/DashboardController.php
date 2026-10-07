@@ -12,12 +12,11 @@ use GuzzleHttp\Client;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\VisitorLog;
-use App\Models\Article;
+use App\Models\Agenda;
 use App\Models\Kontak;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Document;
-use App\Models\Event;
 use App\Models\Aduan;
 use App\Services\SystemHealthService;
 use Illuminate\Support\Facades\Cache;
@@ -58,8 +57,8 @@ class DashboardController extends Controller
         // Content statistics for date range - cache 1 menit per range
         $cacheKeyStats = 'dashboard_stats_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd');
         $contentStats = Cache::remember($cacheKeyStats, 60, fn () => [
-            'totalArticles' => Article::whereBetween('created_at', [$startDate, $endDate])->count(),
-            'publishedArticles' => Article::where('status', 'published')
+            'totalAgendas' => Agenda::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'publishedAgendas' => Agenda::where('status', 'published')
                 ->whereBetween('created_at', [$startDate, $endDate])->count(),
             'totalMessages' => Kontak::whereBetween('created_at', [$startDate, $endDate])->count(),
             'unreadMessages' => Kontak::where('status', 'open')
@@ -67,7 +66,6 @@ class DashboardController extends Controller
             'totalFaq' => Faq::where('status', 'active')->count(),
             'totalPages' => Page::count(),
             'totalDocuments' => Document::count(),
-            'totalEvents' => Event::count(),
         ]);
 
         extract($contentStats);
@@ -105,8 +103,8 @@ class DashboardController extends Controller
 
         $visitorGrowth = $this->growth($visitorStats['total_visits'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->count());
         $uniqueGrowth = $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct('ip_address')->count());
-        $articleGrowth = $this->growth($totalArticles, Article::whereBetween('created_at', [$prevStart, $prevEnd])->count());
-        $publishedGrowth = $this->growth($publishedArticles, Article::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->count());
+        $agendaGrowth = $this->growth($totalAgendas, Agenda::whereBetween('created_at', [$prevStart, $prevEnd])->count());
+        $publishedGrowth = $this->growth($publishedAgendas, Agenda::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $messageGrowth = $this->growth($totalMessages, Kontak::whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $aduanGrowth = $this->growth($aduanTotal, Aduan::whereBetween('tanggal_pengaduan', [$prevStart, $prevEnd])->count());
 
@@ -121,14 +119,13 @@ class DashboardController extends Controller
         return view('pages.dashboard.index', compact(
             'visitorStats',
             'recentActivities',
-            'totalArticles',
-            'publishedArticles',
+            'totalAgendas',
+            'publishedAgendas',
             'totalMessages',
             'unreadMessages',
             'totalFaq',
             'totalPages',
             'totalDocuments',
-            'totalEvents',
             'aduanTotal',
             'aduanSelesai',
             'aduanPersen',
@@ -146,7 +143,7 @@ class DashboardController extends Controller
             'daysDiff',
             'visitorGrowth',
             'uniqueGrowth',
-            'articleGrowth',
+            'agendaGrowth',
             'publishedGrowth',
             'messageGrowth',
             'aduanGrowth'
@@ -193,21 +190,21 @@ class DashboardController extends Controller
     {
         $activities = [];
 
-        // Recent articles
-        $recentArticles = Article::whereBetween('created_at', [$startDate, $endDate])
+        // Recent agendas
+        $recentAgendas = Agenda::whereBetween('created_at', [$startDate, $endDate])
             ->latest('created_at')
             ->limit(5)
             ->get(['uuid', 'title', 'status', 'created_at']);
 
-        foreach ($recentArticles as $article) {
+        foreach ($recentAgendas as $agenda) {
             $activities[] = [
-                'type' => 'article',
+                'type' => 'agenda',
                 'icon' => 'bi-file-earmark-text',
                 'color' => 'primary',
-                'title' => 'Artikel ' . ($article->status === 'published' ? 'dipublikasikan' : 'dibuat'),
-                'description' => $article->title,
-                'time' => $article->created_at,
-                'url' => route('articles.show', $article->uuid),
+                'title' => 'Agenda ' . ($agenda->status === 'published' ? 'dipublikasikan' : 'dibuat'),
+                'description' => $agenda->title,
+                'time' => $agenda->created_at,
+                'url' => route('agendas.show', $agenda->uuid),
             ];
         }
 

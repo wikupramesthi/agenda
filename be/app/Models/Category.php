@@ -22,9 +22,9 @@ class Category extends Model
 
     protected $fillable = ['uuid', 'name', 'slug','description','icon'];
 
-    public function articles()
+    public function agendas()
     {
-            return $this->hasMany(Article::class, 'category_uuid', 'uuid');
+            return $this->hasMany(Agenda::class, 'category_uuid', 'uuid');
 
     }
 
@@ -47,7 +47,7 @@ class Category extends Model
             'slug' => $this->slug,
             'description' => $this->description,
             'icon' => $this->icon,
-            'articles_count' => $this->articles()->count(),
+            'agendas_count' => $this->agendas()->count(),
         ];
     }
 

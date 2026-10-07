@@ -4,11 +4,9 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FaqController;
-use App\Http\Controllers\Api\ArticleController;
-use App\Http\Controllers\Api\DocumentController;
-use App\Http\Controllers\Api\TestimonialController;
-use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\AgendaController;
+use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\AduanController;
@@ -18,7 +16,6 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\WebsiteMenuController;
 use App\Http\Controllers\Api\WebsiteIdentityController;
 use App\Http\Controllers\Api\AlbumController;
-use App\Http\Controllers\Api\OfficialController;
 
 
 
@@ -56,8 +53,7 @@ Route::middleware('throttle:60,1')->prefix('services')->group(function () {
 
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/faqs', [FaqController::class, 'index']);
-    Route::get('/testimonials', [TestimonialController::class, 'index']);
-    Route::get('/categories', [ArticleController::class, 'category']);
+    Route::get('/categories', [AgendaController::class, 'category']);
     Route::get('/banners', [BannerController::class, 'index']);
 });
 Route::get('/contact/captcha', [ContactController::class, 'captcha'])->middleware('throttle:30,1');
@@ -69,11 +65,11 @@ Route::middleware('throttle:60,1')->prefix('albums')->group(function () {
     Route::get('/{uuid}', [AlbumController::class, 'show']);
 });
 
-// Artikel — publik hanya published (lihat ArticleController), throttle anti-scrape
-Route::middleware('throttle:60,1')->prefix('articles')->group(function () {
-    Route::get('/', [ArticleController::class, 'index']);
-    Route::get('category/{slug}', [ArticleController::class, 'byCategory']);
-    Route::get('{slug}', [ArticleController::class, 'show']);
+// Agenda — publik hanya published (lihat AgendaController), throttle anti-scrape
+Route::middleware('throttle:60,1')->prefix('agenda')->group(function () {
+    Route::get('/', [AgendaController::class, 'index']);
+    Route::get('category/{slug}', [AgendaController::class, 'byCategory']);
+    Route::get('{slug}', [AgendaController::class, 'show']);
 });
 
 // Dokumen (read-only untuk frontend; tulis via panel admin)
@@ -98,12 +94,6 @@ Route::middleware('throttle:60,1')->group(function () {
     Route::get('/pages/{slug}', [PageController::class, 'show']);
 });
 
-// Agenda (modul Agenda; alias /events lama yang duplikat sudah dihapus) — hanya published
-Route::middleware('throttle:60,1')->group(function () {
-    Route::get('/agenda', [AgendaController::class, 'index']);
-    Route::get('/agenda/{slug}', [AgendaController::class, 'show']);
-});
-
 // Website Menu (navigasi dinamis)
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/menus', [WebsiteMenuController::class, 'index']);
@@ -114,12 +104,6 @@ Route::middleware('throttle:60,1')->group(function () {
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/website-identity', [WebsiteIdentityController::class, 'show']);
     Route::get('/website-identities', [WebsiteIdentityController::class, 'index']); // alias plural
-});
-
-// Pejabat (informasi-pejabat) - publik hanya is_pejabat+pegawai+active
-Route::middleware('throttle:60,1')->group(function () {
-    Route::get('/officials', [OfficialController::class, 'index']);
-    Route::get('/officials/{uuid}', [OfficialController::class, 'show']);
 });
 
 // Unified Search API (Meilisearch) — throttle ketat anti-abuse

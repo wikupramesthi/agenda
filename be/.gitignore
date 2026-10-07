@@ -21,7 +21,3 @@ yarn-error.log
 /public/build/
 /public/storage-backup
 /public/storage_backup/
-
-
-
-app/Providers/AppServiceProvider.php

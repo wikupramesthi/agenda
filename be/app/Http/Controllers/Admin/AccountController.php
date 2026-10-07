@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Account;
 use App\Models\Kecamatan;
 use App\Models\Kelurahan;
-use App\Models\Department;
 use Illuminate\View\View;
 
 class AccountController extends Controller
@@ -22,10 +21,6 @@ class AccountController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-
-        $departments = Department::where('is_active', 'active')
-            ->orderBy('name')
-            ->get();
 
         $kecamatans = Kecamatan::all();
 
@@ -38,14 +33,12 @@ class AccountController extends Controller
             return view('pages.mobile.profile-update', [
                 'user' => $user,
                 'kecamatans' => $kecamatans,
-                'departments' => $departments,
             ]);
         }
 
         return view('profile.update', [
             'user' => $user,
             'kecamatans' => $kecamatans,
-            'departments' => $departments,
         ]);
     }
 
@@ -105,12 +98,9 @@ class AccountController extends Controller
             return back()->with('error', 'User tidak ditemukan.');
         }
 
-        $isUser = $user->hasRole('user');
-
         $validated = $request->validate([
             'avatar'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'name'           => 'required|string|max:255',
-            'nip'            => 'nullable|string|max:50',
             'email'          => 'nullable|email|unique:users,email,' . $user->uuid . ',uuid',
             'no_hp'          => 'required|unique:users,no_hp,' . $user->uuid . ',uuid',
             'alamat'         => 'nullable|string',
@@ -120,19 +110,11 @@ class AccountController extends Controller
             'tanggal_lahir'  => 'nullable|date',
             'jenis_kelamin'  => 'nullable|in:L,P',
             'agama'          => 'nullable|string|max:50',
-            'is_pejabat'     => 'nullable|boolean',
             'is_active'      => 'nullable|in:active,inactive',
-            'urutan_pejabat' => 'nullable|integer|min:1',
-            'unit_kerja'     => 'nullable|string|max:255',
-            'riwayat'        => 'nullable|string',
-
-            'departments'    => $isUser ? 'nullable|array' : 'required|array|min:1',
-            'departments.*'  => 'uuid|exists:departments,uuid',
         ]);
 
         $user->fill([
             'name'           => $validated['name'],
-            'nip'            => $validated['nip'] ?? null,
             'email'          => $validated['email'] ?? $user->email,
             'no_hp'          => $validated['no_hp'],
             'alamat'         => $validated['alamat'] ?? null,
@@ -142,11 +124,7 @@ class AccountController extends Controller
             'tanggal_lahir'  => $validated['tanggal_lahir'] ?? null,
             'jenis_kelamin'  => $validated['jenis_kelamin'] ?? null,
             'agama'          => $validated['agama'] ?? null,
-            'is_pejabat'     => array_key_exists('is_pejabat', $validated) ? (int) (bool) $validated['is_pejabat'] : ($isUser ? $user->is_pejabat : false),
             'is_active'      => $validated['is_active'] ?? $user->is_active ?? 'active',
-            'urutan_pejabat' => $validated['urutan_pejabat'] ?? ($isUser ? $user->urutan_pejabat : null),
-            'unit_kerja'     => $validated['unit_kerja'] ?? ($isUser ? $user->unit_kerja : null),
-            'riwayat'        => $validated['riwayat'] ?? ($isUser ? $user->riwayat : null),
         ]);
 
         if ($request->hasFile('avatar')) {
@@ -162,12 +140,6 @@ class AccountController extends Controller
         }
 
         $user->save();
-
-        if ($isUser) {
-            $user->departments()->detach();
-        } else {
-            $user->departments()->sync($validated['departments'] ?? []);
-        }
 
         return back()->with('success', 'Profile updated successfully.');
     }

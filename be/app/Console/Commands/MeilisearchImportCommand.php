@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Agenda;
-use App\Models\Article;
 use App\Models\Page;
 use App\Models\Faq;
 use App\Models\Document;
@@ -19,7 +18,7 @@ class MeilisearchImportCommand extends Command
      * @var string
      */
     protected $signature = 'meilisearch:import 
-                            {model? : Model to import (article, page, faq, agenda, event, document, category, aduan, all)}
+                             {model? : Model to import (agenda, page, faq, document, category, aduan, all)}
                             {--fresh : Flush index before importing}';
 
     /**
@@ -38,11 +37,9 @@ class MeilisearchImportCommand extends Command
         $fresh = $this->option('fresh');
 
         $models = [
-            'article' => Article::class,
+            'agenda' => Agenda::class,
             'page' => Page::class,
             'faq' => Faq::class,
-            'agenda' => Agenda::class,
-            'event' => Agenda::class,
             'document' => Document::class,
             'category' => Category::class,
             'aduan' => Aduan::class,

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Aduan;
 use App\Models\Agenda;
-use App\Models\Article;
 use App\Models\Document;
 use App\Models\Page;
 use App\Models\User;
@@ -59,21 +58,21 @@ class SearchController extends Controller
         }
 
         if (!$warga) {
-            // Artikel
-            $articles = Article::query()
+            // Agenda
+            $agendas = Agenda::query()
                 ->where('title', 'like', $like)
                 ->orderByDesc('created_at')
                 ->limit(6)
                 ->get(['uuid', 'title', 'status']);
 
-            if ($articles->isNotEmpty()) {
+            if ($agendas->isNotEmpty()) {
                 $groups[] = [
-                    'label' => 'Berita / Artikel',
+                    'label' => 'Agenda / Agenda',
                     'icon' => 'bi-newspaper',
-                    'items' => $articles->map(fn (Article $a) => [
+                    'items' => $agendas->map(fn (Agenda $a) => [
                         'title' => $a->title,
                         'subtitle' => ucfirst($a->status ?? 'draft'),
-                        'url' => route('articles.edit', $a->uuid),
+                        'url' => route('agendas.edit', $a->uuid),
                     ])->values(),
                 ];
             }
@@ -112,25 +111,6 @@ class SearchController extends Controller
                         'title' => $p->title,
                         'subtitle' => 'Halaman statis',
                         'url' => route('pages.edit', $p->uuid),
-                    ])->values(),
-                ];
-            }
-
-            // Agenda (pengganti Event)
-            $agendas = Agenda::query()
-                ->where('judul', 'like', $like)
-                ->orderByDesc('tanggal')
-                ->limit(6)
-                ->get(['uuid', 'judul', 'status']);
-
-            if ($agendas->isNotEmpty()) {
-                $groups[] = [
-                    'label' => 'Agenda',
-                    'icon' => 'bi-calendar-event',
-                    'items' => $agendas->map(fn (Agenda $e) => [
-                        'title' => $e->judul,
-                        'subtitle' => ucfirst($e->status),
-                        'url' => route('agenda.index'),
                     ])->values(),
                 ];
             }

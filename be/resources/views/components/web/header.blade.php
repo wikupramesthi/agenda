@@ -118,6 +118,10 @@
                             @endforelse
                             </div>
 
+                            <a href="{{ route('notifications.index') }}" class="dropdown-footer d-block text-center text-decoration-none small fw-bold py-2 border-top">
+                                Lihat semua notifikasi <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+
                         </ul>
                     </li>
 

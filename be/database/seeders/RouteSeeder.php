@@ -164,16 +164,5 @@ class RouteSeeder extends Seeder
             ],
         ]);
 
-        // Agenda (pengganti Event)
-        Route::insert([
-            ['route' => 'agenda.index', 'permission_name' => 'agenda.index'],
-            ['route' => 'agenda.create', 'permission_name' => 'agenda.index'],
-            ['route' => 'agenda.store', 'permission_name' => 'agenda.store'],
-            ['route' => 'agenda.show', 'permission_name' => 'agenda.index'],
-            ['route' => 'agenda.edit', 'permission_name' => 'agenda.index'],
-            ['route' => 'agenda.update', 'permission_name' => 'agenda.update'],
-            ['route' => 'agenda.destroy', 'permission_name' => 'agenda.destroy'],
-        ]);
-
     }
 }
