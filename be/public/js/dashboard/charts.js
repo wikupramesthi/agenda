@@ -211,6 +211,48 @@ function createAduanTrenChart() {
     });
 }
 
+// ============ AGENDA TREN CHART (OPD) ============
+let agendaTrenChart = null;
+function createAgendaTrenChart() {
+    const labels = window.dashboardData.agendaTrenLabels;
+    const data = window.dashboardData.agendaTrenData;
+    const pending = window.dashboardData.agendaPendingData;
+    if (!labels || !data) return;
+
+    agendaTrenChart = destroyChart(agendaTrenChart);
+
+    const ctx = getCanvas('agendaTrenChart');
+    if (!ctx) return;
+
+    const datasets = [{
+        label: 'Agenda Masuk',
+        data: data,
+        borderColor: '#0a4d8e',
+        backgroundColor: 'rgba(10, 77, 142, 0.12)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+    }];
+    if (pending) {
+        datasets.push({
+            label: 'Pending',
+            data: pending,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            borderDash: [5, 4],
+        });
+    }
+
+    agendaTrenChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: getLineChartOptions(true, true)
+    });
+}
+
 // ============ SHARED OPTIONS ============
 function getLineChartOptions(showLegend = true, beginAtZero = true) {
     return {
@@ -299,6 +341,7 @@ function initDashboardCharts() {
     createAduanStatusChart();
     createAduanKategoriChart();
     createAduanTrenChart();
+    createAgendaTrenChart();
 }
 
 // Expose globally for tab switching
@@ -306,7 +349,7 @@ window.switchVisitorChart = switchVisitorChart;
 
 // Re-render charts when bootstrap tab becomes visible (hidden canvas has 0 size otherwise)
 function refreshVisibleCharts() {
-    [visitorChart, deviceChart, agendaStatusChart, aduanStatusChart, aduanKategoriChart, aduanTrenChart].forEach(function(c) {
+    [visitorChart, deviceChart, agendaStatusChart, agendaTrenChart, aduanStatusChart, aduanKategoriChart, aduanTrenChart].forEach(function(c) {
         if (c && typeof c.resize === 'function') { try { c.resize(); c.update(); } catch(e) {} }
     });
 }

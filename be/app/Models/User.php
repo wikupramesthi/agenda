@@ -109,4 +109,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(Kelurahan::class);
     }
+
+    /**
+     * Agenda yang diinput user ini (untuk statistik OPD).
+     */
+    public function agendas()
+    {
+        return $this->hasMany(Agenda::class, 'user_uuid', 'uuid');
+    }
 }

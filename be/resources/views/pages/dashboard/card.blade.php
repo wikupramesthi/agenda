@@ -17,6 +17,9 @@
             aduanKategoriData: @json($aduanKategoriData),
             aduanTrenLabels: @json($aduanTrenLabels),
             aduanTrenData: @json($aduanTrenData),
+            agendaTrenLabels: @json($agendaTrenLabels ?? []),
+            agendaTrenData: @json($agendaTrenData ?? []),
+            agendaPendingData: @json($agendaPendingData ?? []),
             routes: {
                 deviceStats: "{{ route('dashboard.device-stats') }}"
             }
@@ -31,12 +34,20 @@
                     <i class="bi bi-calendar3 me-1"></i>
                     {{ now()->translatedFormat('l, j F Y') }}
                 </span>
-                <h3 class="fw-bold mb-1">Selamat Datang, {{ auth()->user()->name }}</h3>
+                @php
+                    $hourNow = (int) now()->format('H');
+                    $greeting = $hourNow < 11 ? 'Selamat Pagi' : ($hourNow < 15 ? 'Selamat Siang' : ($hourNow < 19 ? 'Selamat Sore' : 'Selamat Malam'));
+                @endphp
+                <h3 class="fw-bold mb-1">{{ $greeting }}, {{ auth()->user()->name }}</h3>
                 <p class="mb-0 small text-white">Ringkasan statistik pengunjung website Dinas Bina Marga dan Sumber Daya Air Kota Bekasi.</p>
+                @if (($pendingCount ?? 0) > 0)
+                    <a href="{{ route('agendas.index', ['status' => 'pending']) }}" class="btn btn-sm btn-warning text-dark mt-2">
+                        <i class="bi bi-hourglass-split me-1"></i>{{ $pendingCount }} agenda menunggu persetujuan
+                    </a>
+                @endif
             </div>
             <div class="d-flex gap-2 hero-actions">
                 <a href="{{ route('agendas.create') }}" class="btn btn-light"><i class="bi bi-plus-lg me-1"></i> Tulis Agenda</a>
-                <a href="{{ route('aduans.index') }}" class="btn btn-warning text-white"><i class="bi bi-inbox me-1"></i> Aduan ({{ $aduanTotal ?? 0 }})</a>
             </div>
         </div>
     </div>
@@ -290,6 +301,78 @@
             </div>
         </div>
     </div>
+
+    {{-- Agenda OPD: tren + top 5 + antrean approval --}}
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i>Tren Agenda OPD (6 Bulan Terakhir)</h6>
+                    <a href="{{ route('agendas.index') }}" class="small text-decoration-none fw-medium text-primary">Kelola <i class="bi bi-arrow-right ms-1"></i></a>
+                </div>
+                <div class="card-body p-3 pb-2" style="height: 230px;">
+                    <canvas id="agendaTrenChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-trophy me-1"></i>Top 5 OPD Pengirim Agenda</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    @forelse ($topOpd ?? [] as $i => $opd)
+                        <div class="list-group-item d-flex align-items-center gap-2 px-3 py-2">
+                            <span class="fw-bold text-muted" style="width: 18px;">{{ $i + 1 }}</span>
+                            <div class="avatar avatar-sm flex-shrink-0">
+                                <img src="{{ $opd->avatar ? (Str::startsWith($opd->avatar, 'http') ? $opd->avatar : asset('storage/' . $opd->avatar)) : asset('dist/assets/images/avatar.jpg') }}" alt="{{ $opd->name }}" class="rounded-circle" style="width: 34px; height: 34px; object-fit: cover;">
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold small text-truncate">{{ $opd->name }}</div>
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ ($topOpd->max('total_agenda') ?? 1) > 0 ? round($opd->total_agenda / max($topOpd->max('total_agenda'), 1) * 100) : 0 }}%;" aria-valuenow="{{ $opd->total_agenda }}" aria-valuemin="0" aria-valuemax="{{ $topOpd->max('total_agenda') ?? 1 }}"></div>
+                                </div>
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                <div class="fw-bold small">{{ $opd->total_agenda }}</div>
+                                @if ($opd->pending_agenda > 0)
+                                    <span class="badge bg-warning text-dark" style="font-size: 0.62rem;">{{ $opd->pending_agenda }} pending</span>
+                                @else
+                                    <small class="text-muted" style="font-size: 0.65rem;">agenda</small>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                            <small>Belum ada OPD pengirim agenda.</small>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (($pendingAgendas ?? collect())->isNotEmpty())
+        <div class="card border-0 shadow-sm mb-3 border-start border-warning border-3">
+            <div class="card-header bg-transparent py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 small fw-semibold"><i class="bi bi-hourglass-split me-1 text-warning"></i>Antrean Persetujuan ({{ $pendingAgendas->count() }} menunggu)</h6>
+                <a href="{{ route('agendas.index', ['status' => 'pending']) }}" class="small text-decoration-none fw-medium text-primary">Review semua <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach ($pendingAgendas as $agenda)
+                    <div class="list-group-item d-flex align-items-center gap-2 px-3 py-2">
+                        <i class="bi bi-file-earmark-text text-warning"></i>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-semibold small text-truncate">{{ $agenda->title }}</div>
+                            <small class="text-muted">oleh {{ $agenda->user->name ?? '-' }} &middot; {{ $agenda->created_at->diffForHumans() }}</small>
+                        </div>
+                        <a href="{{ route('agendas.edit', $agenda->uuid) }}" class="btn btn-sm btn-outline-primary">Review</a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- Recent Activity --}}
     <div class="row g-3">

@@ -845,8 +845,8 @@ header .navbar-collapse {
     border-radius: 1.5rem;
     color: #fff;
     padding: 2rem 2.1rem;
-    background: var(--brand-gradient);
-    box-shadow: 0 18px 40px rgba(79, 70, 229, 0.3);
+    background: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%);
+    box-shadow: 0 18px 40px rgba(10, 77, 142, 0.3);
     overflow: hidden;
 }
 

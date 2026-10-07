@@ -97,7 +97,40 @@ class DashboardController extends Controller
                 ->count();
         }
 
-        // Trend calculations (vs previous period)
+        // Tren agenda masuk per bulan (6 bulan terakhir) untuk grafik OPD
+        $agendaTrenLabels = [];
+        $agendaTrenData = [];
+        $agendaPendingData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $bulan = now()->subMonths($i);
+            $agendaTrenLabels[] = $bulan->translatedFormat('M Y');
+            $agendaTrenData[] = Agenda::whereYear('created_at', $bulan->year)
+                ->whereMonth('created_at', $bulan->month)
+                ->count();
+            $agendaPendingData[] = Agenda::where('status', 'pending')
+                ->whereYear('created_at', $bulan->year)
+                ->whereMonth('created_at', $bulan->month)
+                ->count();
+        }
+
+        // Top 5 OPD pengirim agenda terbanyak + antrean pending terbaru
+        $topOpd = User::role('opd')
+            ->withCount(['agendas as total_agenda', 'agendas as pending_agenda' => fn ($q) => $q->where('status', 'pending')])
+            ->orderByDesc('total_agenda')
+            ->limit(5)
+            ->get(['uuid', 'name', 'avatar']);
+        $pendingAgendas = Agenda::with('user')
+            ->where('status', 'pending')
+            ->latest('created_at')
+            ->limit(5)
+            ->get(['uuid', 'title', 'user_uuid', 'created_at']);
+
+        // Antrean approval agenda (OPD: milik sendiri, admin: semua)
+        $pendingCountQuery = Agenda::where('status', 'pending');
+        if (! $request->user()->hasAnyRole(['super-admin', 'admin'])) {
+            $pendingCountQuery->where('user_uuid', $request->user()->uuid);
+        }
+        $pendingCount = $pendingCountQuery->count();
         $prevStart = $startDate->copy()->subDays($daysDiff);
         $prevEnd = $startDate->copy()->subSecond();
 
@@ -134,6 +167,12 @@ class DashboardController extends Controller
             'aduanKategoriData',
             'aduanTrenLabels',
             'aduanTrenData',
+            'agendaTrenLabels',
+            'agendaTrenData',
+            'agendaPendingData',
+            'topOpd',
+            'pendingAgendas',
+            'pendingCount',
             'schedulerTerakhir',
             'schedulerOk',
             'storageOk',
