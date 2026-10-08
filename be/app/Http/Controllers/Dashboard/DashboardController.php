@@ -18,6 +18,7 @@ use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Document;
 use App\Models\Aduan;
+use App\Models\Album;
 use App\Services\SystemHealthService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -66,36 +67,12 @@ class DashboardController extends Controller
             'totalFaq' => Faq::where('status', 'active')->count(),
             'totalPages' => Page::count(),
             'totalDocuments' => Document::count(),
+            'totalOpdAktif' => User::role('opd')->count(),
+            'totalGaleri' => Album::where('status', 'active')->count(),
         ]);
 
         extract($contentStats);
 
-        // Statistik pengaduan untuk grafik dashboard
-        $aduanCacheKey = 'dashboard_aduan_total';
-        $aduanTotal = Cache::remember($aduanCacheKey . '_total', 600, fn () => Aduan::count());
-        $aduanSelesai = Cache::remember($aduanCacheKey . '_selesai', 600, fn () => Aduan::where('status', 'selesai')->count());
-        $aduanPersen = $aduanTotal > 0 ? round($aduanSelesai / $aduanTotal * 100, 1) : 0;
-
-        $aduanPerStatus = [];
-        foreach (['menunggu', 'diverifikasi', 'diproses', 'selesai', 'ditolak'] as $st) {
-            $aduanPerStatus[] = Aduan::where('status', $st)->count();
-        }
-
-        $aduanKategoriLabels = Aduan::KATEGORI;
-        $aduanKategoriData = [];
-        foreach ($aduanKategoriLabels as $kat) {
-            $aduanKategoriData[] = Aduan::where('kategori', $kat)->count();
-        }
-
-        $aduanTrenLabels = [];
-        $aduanTrenData = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $bulan = now()->subMonths($i);
-            $aduanTrenLabels[] = $bulan->translatedFormat('M Y');
-            $aduanTrenData[] = Aduan::whereYear('tanggal_pengaduan', $bulan->year)
-                ->whereMonth('tanggal_pengaduan', $bulan->month)
-                ->count();
-        }
 
         // Tren agenda masuk per bulan (6 bulan terakhir) untuk grafik OPD
         $agendaTrenLabels = [];
@@ -119,6 +96,50 @@ class DashboardController extends Controller
             ->orderByDesc('total_agenda')
             ->limit(5)
             ->get(['uuid', 'name', 'avatar']);
+
+        // Agenda paling banyak dilihat
+        $topViewedAgendas = Agenda::where('status', 'published')
+            ->orderByDesc('views')
+            ->limit(5)
+            ->get(['uuid', 'slug', 'title', 'views', 'created_at']);
+
+        // Agenda per kategori (untuk chart)
+        $agendaKategori = Category::withCount('agendas')->orderByDesc('agendas_count')->get();
+        $agendaKategoriLabels = $agendaKategori->pluck('name');
+        $agendaKategoriData = $agendaKategori->pluck('agendas_count');
+
+        // Komposisi konten (untuk chart donut)
+        $komposisiKontenLabels = ['Halaman', 'Dokumen', 'FAQ', 'Agenda'];
+        $komposisiKontenData = [Page::count(), Document::count(), Faq::count(), Agenda::count()];
+
+        // Browser & kota asal pengunjung (untuk chart)
+        $browserStats = VisitorLog::whereBetween('visited_at', [$startDate, $endDate])
+            ->selectRaw('browser, count(*) as total')
+            ->groupBy('browser')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->pluck('total', 'browser');
+        $kotaStats = VisitorLog::whereBetween('visited_at', [$startDate, $endDate])
+            ->whereNotNull('city')
+            ->selectRaw('city, count(*) as total')
+            ->groupBy('city')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->pluck('total', 'city');
+
+        // OPD tidak isi agenda dalam 7 hari terakhir
+        $opdTidakAktif = User::role('opd')
+            ->whereDoesntHave('agendas', fn ($q) => $q->where('created_at', '>=', now()->subDays(7)))
+            ->orderBy('name')
+            ->get(['uuid', 'name', 'avatar'])
+            ->map(function ($user) {
+                $lastAgenda = $user->agendas()->latest('created_at')->first(['created_at']);
+                return [
+                    'name' => $user->name,
+                    'avatar' => $user->avatar,
+                    'last_agenda' => $lastAgenda ? $lastAgenda->created_at : null,
+                ];
+            });
         $pendingAgendas = Agenda::with('user')
             ->where('status', 'pending')
             ->latest('created_at')
@@ -139,7 +160,6 @@ class DashboardController extends Controller
         $agendaGrowth = $this->growth($totalAgendas, Agenda::whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $publishedGrowth = $this->growth($publishedAgendas, Agenda::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $messageGrowth = $this->growth($totalMessages, Kontak::whereBetween('created_at', [$prevStart, $prevEnd])->count());
-        $aduanGrowth = $this->growth($aduanTotal, Aduan::whereBetween('tanggal_pengaduan', [$prevStart, $prevEnd])->count());
 
         // Ringkasan kesehatan sistem untuk widget dashboard (single source via SystemHealthService)
         $schedulerTerakhir = $this->health->getSchedulerLastRun();
@@ -159,19 +179,21 @@ class DashboardController extends Controller
             'totalFaq',
             'totalPages',
             'totalDocuments',
-            'aduanTotal',
-            'aduanSelesai',
-            'aduanPersen',
-            'aduanPerStatus',
-            'aduanKategoriLabels',
-            'aduanKategoriData',
-            'aduanTrenLabels',
-            'aduanTrenData',
+            'totalOpdAktif',
+            'totalGaleri',
             'agendaTrenLabels',
             'agendaTrenData',
             'agendaPendingData',
             'topOpd',
             'pendingAgendas',
+            'opdTidakAktif',
+            'topViewedAgendas',
+            'agendaKategoriLabels',
+            'agendaKategoriData',
+            'komposisiKontenLabels',
+            'komposisiKontenData',
+            'browserStats',
+            'kotaStats',
             'pendingCount',
             'schedulerTerakhir',
             'schedulerOk',
@@ -184,8 +206,7 @@ class DashboardController extends Controller
             'uniqueGrowth',
             'agendaGrowth',
             'publishedGrowth',
-            'messageGrowth',
-            'aduanGrowth'
+            'messageGrowth'
         ));
     }
 
@@ -225,7 +246,7 @@ class DashboardController extends Controller
         ));
     }
 
-    protected function getRecentActivities(Carbon $startDate, Carbon $endDate, int $limit = 10): array
+    protected function getRecentActivities(Carbon $startDate, Carbon $endDate, int $limit = 5): array
     {
         $activities = [];
 
@@ -233,7 +254,7 @@ class DashboardController extends Controller
         $recentAgendas = Agenda::whereBetween('created_at', [$startDate, $endDate])
             ->latest('created_at')
             ->limit(5)
-            ->get(['uuid', 'title', 'status', 'created_at']);
+            ->get(['uuid', 'slug', 'title', 'status', 'created_at']);
 
         foreach ($recentAgendas as $agenda) {
             $activities[] = [
@@ -243,7 +264,8 @@ class DashboardController extends Controller
                 'title' => 'Agenda ' . ($agenda->status === 'published' ? 'dipublikasikan' : 'dibuat'),
                 'description' => $agenda->title,
                 'time' => $agenda->created_at,
-                'url' => route('agendas.show', $agenda->uuid),
+                'date' => $agenda->created_at->translatedFormat('d M Y'),
+                'url' => route('agendas.show', $agenda->slug),
             ];
         }
 
@@ -261,6 +283,7 @@ class DashboardController extends Controller
                 'title' => 'Pesan baru dari ' . $message->nama,
                 'description' => Str::limit($message->isi, 50),
                 'time' => $message->created_at,
+                'date' => $message->created_at->translatedFormat('d M Y'),
                 'url' => route('layanan.kontak'),
             ];
         }

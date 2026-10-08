@@ -9,9 +9,6 @@ window.dashboardData = window.dashboardData || {};
 let visitorChart = null;
 let deviceChart = null;
 let agendaStatusChart = null;
-let aduanStatusChart = null;
-let aduanKategoriChart = null;
-let aduanTrenChart = null;
 
 // ============ UTILITIES ============
 function getCanvas(id) {
@@ -131,85 +128,6 @@ function createAgendaStatusChart() {
     });
 }
 
-// ============ ADUAN STATUS CHART ============
-function createAduanStatusChart() {
-    const data = window.dashboardData.aduanPerStatus;
-    if (!data) return;
-
-    aduanStatusChart = destroyChart(aduanStatusChart);
-
-    const ctx = getCanvas('aduanStatusChart');
-    if (!ctx) return;
-
-    aduanStatusChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Menunggu', 'Diverifikasi', 'Diproses', 'Selesai', 'Ditolak'],
-            datasets: [{
-                data: data,
-                backgroundColor: ['#8898aa', '#11cdef', '#fb6340', '#2dce89', '#f5365c'],
-                borderWidth: 0,
-                hoverOffset: 10,
-            }]
-        },
-        options: getDoughnutOptions(false, 11, false)
-    });
-}
-
-// ============ ADUAN KATEGORI CHART ============
-function createAduanKategoriChart() {
-    const labels = window.dashboardData.aduanKategoriLabels;
-    const data = window.dashboardData.aduanKategoriData;
-    if (!labels || !data) return;
-
-    aduanKategoriChart = destroyChart(aduanKategoriChart);
-
-    const ctx = getCanvas('aduanKategoriChart');
-    if (!ctx) return;
-
-    aduanKategoriChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Jumlah Aduan',
-                data: data,
-                backgroundColor: ['#11cdef', '#fb6340', '#825ee4', '#f5365c', '#2dce89', '#ffd600', '#0d99c7', '#e91e63', '#8bc34a'],
-                borderRadius: 6,
-            }]
-        },
-        options: getBarChartOptions()
-    });
-}
-
-// ============ ADUAN TREN CHART ============
-function createAduanTrenChart() {
-    const labels = window.dashboardData.aduanTrenLabels;
-    const data = window.dashboardData.aduanTrenData;
-    if (!labels || !data) return;
-
-    aduanTrenChart = destroyChart(aduanTrenChart);
-
-    const ctx = getCanvas('aduanTrenChart');
-    if (!ctx) return;
-
-    aduanTrenChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Aduan Masuk',
-                data: data,
-                borderColor: '#fb6340',
-                backgroundColor: 'rgba(251, 99, 64, 0.12)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-            }]
-        },
-        options: getLineChartOptions(false, true)
-    });
-}
 
 // ============ AGENDA TREN CHART (OPD) ============
 let agendaTrenChart = null;
@@ -250,6 +168,148 @@ function createAgendaTrenChart() {
         type: 'line',
         data: { labels: labels, datasets: datasets },
         options: getLineChartOptions(true, true)
+    });
+}
+
+// ============ TOP OPD CHART ============
+let topOpdChart = null;
+function createTopOpdChart() {
+    const labels = window.dashboardData.topOpdLabels;
+    const data = window.dashboardData.topOpdData;
+    if (!labels || !data) return;
+
+    topOpdChart = destroyChart(topOpdChart);
+
+    const ctx = getCanvas('topOpdChart');
+    if (!ctx) return;
+
+    topOpdChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Jumlah Agenda',
+                data: data,
+                backgroundColor: ['#0a4d8e', '#139a8d', '#5e72e4', '#825ee4', '#11cdef'],
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            ...getBarChartOptions(),
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#f1f5f9' } },
+                y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+            }
+        }
+    });
+}
+
+// ============ BROWSER CHART ============
+let browserChart = null;
+function createBrowserChart() {
+    const labels = window.dashboardData.browserLabels;
+    const data = window.dashboardData.browserData;
+    if (!labels || !data) return;
+
+    browserChart = destroyChart(browserChart);
+
+    const ctx = getCanvas('browserChart');
+    if (!ctx) return;
+
+    browserChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: ['#5e72e4', '#11cdef', '#fb6340', '#2dce89', '#f5365c'],
+                borderWidth: 0,
+                hoverOffset: 10,
+            }]
+        },
+        options: getDoughnutOptions('bottom', 11)
+    });
+}
+
+// ============ KOTA CHART ============
+let kotaChart = null;
+function createKotaChart() {
+    const labels = window.dashboardData.kotaLabels;
+    const data = window.dashboardData.kotaData;
+    if (!labels || !data) return;
+
+    kotaChart = destroyChart(kotaChart);
+
+    const ctx = getCanvas('kotaChart');
+    if (!ctx) return;
+
+    kotaChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Kunjungan',
+                data: data,
+                backgroundColor: ['#0a4d8e', '#139a8d', '#5e72e4', '#11cdef', '#fb6340'],
+                borderRadius: 6,
+            }]
+        },
+        options: getBarChartOptions()
+    });
+}
+
+// ============ AGENDA KATEGORI CHART ============
+let agendaKategoriChart = null;
+function createAgendaKategoriChart() {
+    const labels = window.dashboardData.agendaKategoriLabels;
+    const data = window.dashboardData.agendaKategoriData;
+    if (!labels || !data) return;
+
+    agendaKategoriChart = destroyChart(agendaKategoriChart);
+
+    const ctx = getCanvas('agendaKategoriChart');
+    if (!ctx) return;
+
+    agendaKategoriChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Jumlah Agenda',
+                data: data,
+                backgroundColor: ['#11cdef', '#fb6340', '#825ee4', '#2dce89', '#f5365c', '#ffd600'],
+                borderRadius: 6,
+            }]
+        },
+        options: getBarChartOptions()
+    });
+}
+
+// ============ KOMPOSISI KONTEN CHART ============
+let komposisiKontenChart = null;
+function createKomposisiKontenChart() {
+    const labels = window.dashboardData.komposisiKontenLabels;
+    const data = window.dashboardData.komposisiKontenData;
+    if (!labels || !data) return;
+
+    komposisiKontenChart = destroyChart(komposisiKontenChart);
+
+    const ctx = getCanvas('komposisiKontenChart');
+    if (!ctx) return;
+
+    komposisiKontenChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: ['#5e72e4', '#11cdef', '#fb6340', '#2dce89'],
+                borderWidth: 0,
+                hoverOffset: 10,
+            }]
+        },
+        options: getDoughnutOptions('bottom', 11)
     });
 }
 
@@ -338,10 +398,12 @@ function initDashboardCharts() {
     createVisitorChart('daily');
     createDeviceChart();
     createAgendaStatusChart();
-    createAduanStatusChart();
-    createAduanKategoriChart();
-    createAduanTrenChart();
     createAgendaTrenChart();
+    createTopOpdChart();
+    createAgendaKategoriChart();
+    createKomposisiKontenChart();
+    createBrowserChart();
+    createKotaChart();
 }
 
 // Expose globally for tab switching
@@ -349,7 +411,7 @@ window.switchVisitorChart = switchVisitorChart;
 
 // Re-render charts when bootstrap tab becomes visible (hidden canvas has 0 size otherwise)
 function refreshVisibleCharts() {
-    [visitorChart, deviceChart, agendaStatusChart, agendaTrenChart, aduanStatusChart, aduanKategoriChart, aduanTrenChart].forEach(function(c) {
+    [visitorChart, deviceChart, agendaStatusChart, agendaTrenChart, topOpdChart, agendaKategoriChart, komposisiKontenChart, browserChart, kotaChart].forEach(function(c) {
         if (c && typeof c.resize === 'function') { try { c.resize(); c.update(); } catch(e) {} }
     });
 }

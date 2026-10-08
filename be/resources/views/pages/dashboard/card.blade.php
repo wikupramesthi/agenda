@@ -12,14 +12,19 @@
                 total: {{ $totalAgendas }},
                 published: {{ $publishedAgendas }}
             },
-            aduanPerStatus: @json($aduanPerStatus),
-            aduanKategoriLabels: @json($aduanKategoriLabels),
-            aduanKategoriData: @json($aduanKategoriData),
-            aduanTrenLabels: @json($aduanTrenLabels),
-            aduanTrenData: @json($aduanTrenData),
             agendaTrenLabels: @json($agendaTrenLabels ?? []),
             agendaTrenData: @json($agendaTrenData ?? []),
             agendaPendingData: @json($agendaPendingData ?? []),
+            topOpdLabels: @json(($topOpd ?? collect())->pluck('name')),
+            topOpdData: @json(($topOpd ?? collect())->pluck('total_agenda')),
+            agendaKategoriLabels: @json($agendaKategoriLabels ?? []),
+            agendaKategoriData: @json($agendaKategoriData ?? []),
+            komposisiKontenLabels: @json($komposisiKontenLabels ?? []),
+            komposisiKontenData: @json($komposisiKontenData ?? []),
+            browserLabels: @json($browserStats ? $browserStats->keys()->values() : []),
+            browserData: @json($browserStats ? $browserStats->values()->values() : []),
+            kotaLabels: @json($kotaStats ? $kotaStats->keys()->values() : []),
+            kotaData: @json($kotaStats ? $kotaStats->values()->values() : []),
             routes: {
                 deviceStats: "{{ route('dashboard.device-stats') }}"
             }
@@ -129,35 +134,17 @@
             </a>
         </div>
 
-        {{-- Messages --}}
+        {{-- OPD Aktif --}}
         <div class="col-6 col-lg-3">
-            <a href="{{ route('layanan.kontak') }}" class="text-decoration-none text-reset">
-                <div class="card border-warning shadow-sm h-100 stat-card hover-lift">
+            <a href="{{ route('user.index') }}" class="text-decoration-none text-reset">
+                <div class="card border-primary shadow-sm h-100 stat-card hover-lift">
                     <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
-                        <div class="stats-icon bg-light-warning rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
-                            <i class='bi bi-envelope-fill text-warning'></i>
+                        <div class="stats-icon bg-light-primary rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            <i class='bi bi-building-fill text-primary'></i>
                         </div>
                         <div class="min-w-0">
-                            <div class="stat-label small text-truncate d-block" title="{{ $dateRangeLabel ?? '' }}">Pesan Masuk ({{ $daysDiff ?? 30 }} hari)</div>
-                            <div class="stat-value fw-bold text-truncate d-flex align-items-center gap-1" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalMessages }} <span class="badge bg-danger badge-sm">{{ $unreadMessages }}</span></div>
-                            @include('partials.stat-trend', ['growth' => $messageGrowth, 'daysDiff' => $daysDiff ?? 30])
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        {{-- FAQ --}}
-        <div class="col-6 col-lg-3">
-            <a href="{{ route('faq.index') }}" class="text-decoration-none text-reset">
-                <div class="card border-secondary shadow-sm h-100 stat-card hover-lift">
-                    <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
-                        <div class="stats-icon bg-light-secondary rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
-                            <i class='bi bi-question-circle-fill text-secondary'></i>
-                        </div>
-                        <div class="min-w-0">
-                            <div class="stat-label small text-truncate d-block">FAQ Aktif</div>
-                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalFaq }}</div>
+                            <div class="stat-label small text-truncate d-block">Total OPD Aktif</div>
+                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalOpdAktif }}</div>
                         </div>
                     </div>
                 </div>
@@ -198,6 +185,40 @@
             </a>
         </div>
 
+        {{-- FAQ --}}
+        <div class="col-6 col-lg-3">
+            <a href="{{ route('faq.index') }}" class="text-decoration-none text-reset">
+                <div class="card border-secondary shadow-sm h-100 stat-card hover-lift">
+                    <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
+                        <div class="stats-icon bg-light-secondary rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            <i class='bi bi-question-circle-fill text-secondary'></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="stat-label small text-truncate d-block">FAQ Aktif</div>
+                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalFaq }}</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Galeri --}}
+        <div class="col-6 col-lg-3">
+            <a href="{{ route('banner.index') }}" class="text-decoration-none text-reset">
+                <div class="card border-secondary shadow-sm h-100 stat-card hover-lift">
+                    <div class="card-body d-flex align-items-center gap-2 p-2 p-md-3">
+                        <div class="stats-icon bg-light-secondary rounded-3 p-3 flex-shrink-0" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                            <i class='bi bi-images text-secondary'></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="stat-label small text-truncate d-block">Total Galeri</div>
+                            <div class="stat-value fw-bold text-truncate" style="font-size: 1.25rem; line-height: 1.2;">{{ $totalGaleri }}</div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
     </div>
 
     {{-- Charts Section - Tabbed --}}
@@ -205,7 +226,6 @@
         <div class="card-header">
             <ul class="nav nav-tabs nav-fill dash-tabs mb-0" role="tablist">
                 <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-visitor">Pengunjung</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-aduan">Pengaduan</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-content">Konten</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-device">Perangkat</button></li>
             </ul>
@@ -227,22 +247,23 @@
                     <div style="height:200px"><canvas id="visitorChart"></canvas></div>
                 </div>
 
-                {{-- Aduan Tab --}}
-                <div class="tab-pane fade" id="tab-aduan">
+
+                {{-- Content Tab --}}
+                <div class="tab-pane fade" id="tab-content">
                     <div class="row g-3 mb-3">
                         <div class="col-lg-4">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-pie-chart me-1"></i>Status Pengaduan</h6>
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart me-1"></i>Status Agenda</h6>
                                 </div>
-                                <div class="card-body p-3 pb-2">
-                                    <div class="d-flex justify-content-center mb-3" style="position:relative; height:170px;">
-                                        <canvas id="aduanStatusChart"></canvas>
+                                <div class="card-body p-3 pb-2 d-flex align-items-center justify-content-center">
+                                    <div class="d-flex justify-content-center mb-3" style="height: 180px;">
+                                        <canvas id="agendaStatusChart" width="180" height="180"></canvas>
                                     </div>
-                                    <div class="row g-2 text-center">
-                                        <div class="col-4"><div class="fw-bold text-primary">{{ number_format($aduanTotal) }}</div><div class="small text-muted">Total</div></div>
-                                        <div class="col-4"><div class="fw-bold text-success">{{ number_format($aduanSelesai) }}</div><div class="small text-muted">Selesai</div></div>
-                                        <div class="col-4"><div class="fw-bold text-warning">{{ $aduanPersen }}%</div><div class="small text-muted">Tuntas</div></div>
+                                    <div class="row g-2 text-center w-100">
+                                        <div class="col-4"><div class="fw-bold text-success">{{ $publishedAgendas }}</div><div class="small text-muted">Dipublikasikan</div></div>
+                                        <div class="col-4"><div class="fw-bold text-warning">{{ $totalAgendas - $publishedAgendas }}</div><div class="small text-muted">Draft</div></div>
+                                        <div class="col-4"><div class="fw-bold text-primary">{{ $totalAgendas }}</div><div class="small text-muted">Total</div></div>
                                     </div>
                                 </div>
                             </div>
@@ -250,38 +271,33 @@
                         <div class="col-lg-8">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart me-1"></i>Aduan per Kategori</h6>
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart-steps me-1"></i>Top 5 OPD Pengirim Agenda</h6>
                                 </div>
-                                <div class="card-body p-3 pb-2" style="height: 220px;">
-                                    <canvas id="aduanKategoriChart"></canvas>
+                                <div class="card-body p-3 pb-2" style="height: 260px;">
+                                    <canvas id="topOpdChart"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                            <h6 class="mb-0 small fw-semibold"><i class="bi bi-graph-up me-1"></i>Tren Aduan Masuk (6 Bulan Terakhir)</h6>
-                        </div>
-                        <div class="card-body p-3 pb-2" style="height: 150px;">
-                            <canvas id="aduanTrenChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Content Tab --}}
-                <div class="tab-pane fade" id="tab-content">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                            <h6 class="mb-0 small fw-semibold"><i class="bi bi-bar-chart me-1"></i>Status Agenda</h6>
-                        </div>
-                        <div class="card-body p-3 pb-2 d-flex align-items-center justify-content-center">
-                            <div class="d-flex justify-content-center mb-3" style="height: 180px;">
-                                <canvas id="agendaStatusChart" width="180" height="180"></canvas>
+                    <div class="row g-3">
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-tags me-1"></i>Agenda per Kategori</h6>
+                                </div>
+                                <div class="card-body p-3 pb-2" style="height: 230px;">
+                                    <canvas id="agendaKategoriChart"></canvas>
+                                </div>
                             </div>
-                            <div class="row g-2 text-center w-100">
-                                <div class="col-4"><div class="fw-bold text-success">{{ $publishedAgendas }}</div><div class="small text-muted">Dipublikasikan</div></div>
-                                <div class="col-4"><div class="fw-bold text-warning">{{ $totalAgendas - $publishedAgendas }}</div><div class="small text-muted">Draft</div></div>
-                                <div class="col-4"><div class="fw-bold text-primary">{{ $totalAgendas }}</div><div class="small text-muted">Total</div></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-pie-chart me-1"></i>Komposisi Konten</h6>
+                                </div>
+                                <div class="card-body p-3 pb-2 d-flex justify-content-center" style="height: 230px;">
+                                    <canvas id="komposisiKontenChart" width="230" height="230"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -289,12 +305,36 @@
 
                 {{-- Device Tab --}}
                 <div class="tab-pane fade" id="tab-device">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                            <h6 class="mb-0 small fw-semibold"><i class="bi bi-device-desktop me-1"></i>Perangkat</h6>
+                    <div class="row g-3">
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-device-desktop me-1"></i>Perangkat</h6>
+                                </div>
+                                <div class="card-body p-3 pb-2" style="height: 280px;">
+                                    <div style="position: relative; height: 100%;"><canvas id="deviceChart"></canvas></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-3 pb-2 d-flex flex-column" style="min-height: 280px;">
-                            <canvas id="deviceChart" height="180" class="flex-grow-1"></canvas>
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-browser-chrome me-1"></i>Browser Pengunjung</h6>
+                                </div>
+                                <div class="card-body p-3 pb-2" style="height: 280px;">
+                                    <div style="position: relative; height: 100%; display: flex; justify-content: center; align-items: center;"><canvas id="browserChart"></canvas></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-geo-alt me-1"></i>Kota Asal Pengunjung</h6>
+                                </div>
+                                <div class="card-body p-3 pb-2" style="height: 280px;">
+                                    <div style="position: relative; height: 100%;"><canvas id="kotaChart"></canvas></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -318,7 +358,7 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent py-2 px-3 border-bottom">
-                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-trophy me-1"></i>Top 5 OPD Pengirim Agenda</h6>
+                    <h6 class="mb-0 small fw-semibold"><i class="bi bi-trophy me-1"></i>Top 5 OPD</h6>
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse ($topOpd ?? [] as $i => $opd)
@@ -376,8 +416,8 @@
 
     {{-- Recent Activity --}}
     <div class="row g-3">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
                 <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
                     <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-clock-history me-1"></i>Aktivitas Terbaru</h5>
                     <a href="{{ route('agendas.index') }}" class="small text-decoration-none fw-medium text-primary">Lihat Semua <i class="bi bi-arrow-right ms-1"></i></a>
@@ -393,7 +433,7 @@
                                 <div class="fw-medium small mb-0">{{ $activity['title'] }}</div>
                                 <div class="small text-muted timeline-desc text-truncate">{{ $activity['description'] }}</div>
                             </div>
-                            <div class="small text-muted ms-2 d-none d-md-block">{{ $activity['time']->diffForHumans() }}</div>
+                            <div class="small text-muted ms-2 d-none d-md-block text-end">{{ $activity['date'] }}<br><span class="text-muted">{{ $activity['time']->diffForHumans() }}</span></div>
                             <a href="{{ $activity['url'] }}" class="btn btn-outline-{{ $activity['color'] }} btn-sm ms-2 d-inline-flex" style="padding: 0.15rem 0.5rem;"><i class="bi bi-eye"></i></a>
                         </div>
                         @endforeach
@@ -402,18 +442,46 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-transparent d-flex justify-content-between align-items-center py-2 px-3 border-bottom">
-                    <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Quick Actions</h5>
+        <div class="col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                    <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-eye me-1"></i>Agenda Paling Banyak Dilihat</h5>
                 </div>
-                <div class="card-body p-3">
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('agendas.create') }}" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-2"></i> Tulis Agenda Baru</a>
-                        <a href="{{ route('aduans.index') }}" class="btn btn-outline-warning text-dark"><i class="bi bi-inbox me-2"></i> Kelola Aduan</a>
-                        <a href="{{ route('faq.create') }}" class="btn btn-outline-info"><i class="bi bi-question-circle me-2"></i> Tambah FAQ</a>
-                        <a href="{{ route('documents.create') }}" class="btn btn-outline-secondary"><i class="bi bi-file-earmark-plus me-2"></i> Upload Dokumen</a>
-                    </div>
+                <div class="list-group list-group-flush">
+                    @forelse ($topViewedAgendas ?? [] as $tema)
+                        <a href="{{ route('agendas.show', $tema->slug) }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2 px-3 py-2">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold small text-truncate">{{ $tema->title }}</div>
+                                <small class="text-muted">{{ $tema->created_at->translatedFormat('d M Y') }}</small>
+                            </div>
+                            <span class="badge bg-light-primary text-primary"><i class="bi bi-eye me-1"></i>{{ number_format($tema->views) }}</span>
+                        </a>
+                    @empty
+                        <div class="text-center text-muted py-4"><small>Belum ada agenda.</small></div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent py-2 px-3 border-bottom">
+                    <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>OPD 7 Hari Tidak Aktif</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    @forelse ($opdTidakAktif ?? [] as $opd)
+                        <div class="list-group-item d-flex align-items-center gap-2 px-3 py-2">
+                            <div class="avatar avatar-sm flex-shrink-0">
+                                <img src="{{ $opd['avatar'] ? (Str::startsWith($opd['avatar'], 'http') ? $opd['avatar'] : asset('storage/' . $opd['avatar'])) : asset('dist/assets/images/avatar.jpg') }}" alt="{{ $opd['name'] }}" class="rounded-circle" style="width: 30px; height: 30px; object-fit: cover;">
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold small text-truncate">{{ $opd['name'] }}</div>
+                                <small class="text-muted">{{ $opd['last_agenda'] ? 'Terakhir isi: ' . $opd['last_agenda']->diffForHumans() : 'Belum pernah isi agenda' }}</small>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-4"><small>Semua OPD aktif.</small></div>
+                    @endforelse
                 </div>
             </div>
         </div>
