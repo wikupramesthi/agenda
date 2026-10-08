@@ -110,7 +110,6 @@ class AccountController extends Controller
             'tanggal_lahir'  => 'nullable|date',
             'jenis_kelamin'  => 'nullable|in:L,P',
             'agama'          => 'nullable|string|max:50',
-            'is_active'      => 'nullable|in:active,inactive',
         ]);
 
         $user->fill([
@@ -124,7 +123,6 @@ class AccountController extends Controller
             'tanggal_lahir'  => $validated['tanggal_lahir'] ?? null,
             'jenis_kelamin'  => $validated['jenis_kelamin'] ?? null,
             'agama'          => $validated['agama'] ?? null,
-            'is_active'      => $validated['is_active'] ?? $user->is_active ?? 'active',
         ]);
 
         if ($request->hasFile('avatar')) {

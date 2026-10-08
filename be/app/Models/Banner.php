@@ -12,7 +12,16 @@ class Banner extends Model
     use HasFactory, ImageOptimizable;
 
     protected $table = 'banner';
-    protected $guarded = [];
+    protected $fillable = [
+        'nama',
+        'deskripsi',
+        'link',
+        'gambar',
+        'posisi',
+        'status',
+        'tipe',
+        'video_url',
+    ];
 
     protected $primaryKey = 'uuid';
     public $incrementing = false;

@@ -11,7 +11,12 @@ class Album extends Model
     use HasFactory;
 
     protected $table = 'albums';
-    protected $guarded = [];
+    protected $fillable = [
+        'nama',
+        'deskripsi',
+        'cover',
+        'status',
+    ];
 
     protected $primaryKey = 'uuid';
     public $incrementing = false;

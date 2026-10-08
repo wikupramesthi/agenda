@@ -12,7 +12,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize() : bool
     {
-        return true;
+        return $this->user()->hasAnyRole(['super-admin']);
     }
 
     /**
@@ -23,9 +23,9 @@ class UpdateUserRequest extends FormRequest
     public function rules() : array
     {
         return [
-            'name' => ['required', 'string'],
-            'email' => ['required', 'string', 'email:rfc', Rule::unique('users')->ignore($this->user)],
-            'role' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
+            'role' => ['required', 'string', Rule::exists('roles', 'name')],
             'verified' => ['nullable', 'boolean'],
         ];
     }

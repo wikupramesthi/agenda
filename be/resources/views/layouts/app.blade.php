@@ -29,6 +29,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/admin-modern.css') }}?v={{ \Illuminate\Support\Facades\File::exists(public_path('css/admin-modern.css')) ? filemtime(public_path('css/admin-modern.css')) : '1' }}" />
+    <link rel="stylesheet" href="{{ asset('css/btn-soft.css') }}?v={{ \Illuminate\Support\Facades\File::exists(public_path('css/btn-soft.css')) ? filemtime(public_path('css/btn-soft.css')) : '1' }}" />
 
     <link
         href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
@@ -44,8 +45,8 @@
 <body>
     <div class="min-height-300 position-absolute w-100" style="background: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%); top: 0; left: 0;"></div>
     <div class="app-loader" id="app-loader">
-        <img src="{{ asset('img/logo.png') }}" alt="DBMSDA" class="app-loader__logo app-loader__logo--light">
-        <img src="{{ asset('img/logo-white.png') }}" alt="DBMSDA" class="app-loader__logo app-loader__logo--dark">
+        <img src="{{ asset('img/logo.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--light">
+        <img src="{{ asset('img/logo-white.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--dark">
         <div class="app-loader__spinner" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
@@ -73,7 +74,7 @@
                     <div class="argon-footer d-flex flex-wrap justify-content-center align-items-center gap-2 text-center">
                         <span>&copy; <script>
                                 document.write(new Date().getFullYear())
-                            </script> DBMSDA Kota Bekasi.</span>
+                            </script> Pemerintah Kota Bekasi.</span>
                         <span class="argon-footer-dot" aria-hidden="true"></span>
                         <span>All rights reserved</span>
                     </div>

@@ -8,6 +8,7 @@ use App\Models\Aduan;
 use App\Models\AduanTindakLanjut;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,9 @@ class AduanTindakLanjutController extends Controller
      */
     public function store(Request $request, $aduanUuid)
     {
+        // Hanya petugas yang boleh menambah tindak lanjut / mengubah status.
+        abort_unless($request->user()->hasAnyRole(['super-admin', 'admin', 'uptd']), 403);
+
         $aduan = Aduan::where('uuid', $aduanUuid)->firstOrFail();
 
         $request->validate([
@@ -61,19 +65,22 @@ class AduanTindakLanjutController extends Controller
                 ->with('success', $pesan);
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error('Gagal tambah tindak lanjut: ' . $th->getMessage());
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', $th->getMessage());
+                ->with('error', 'Gagal menyimpan tindak lanjut. Silakan coba lagi.');
         }
     }
 
     /**
      * Hapus satu tindak lanjut beserta fotonya (status induk tidak dikembalikan).
      */
-    public function destroy($uuid)
+    public function destroy(Request $request, $uuid)
     {
+        abort_unless($request->user()->hasAnyRole(['super-admin', 'admin', 'uptd']), 403);
+
         $item = AduanTindakLanjut::where('uuid', $uuid)->firstOrFail();
 
         DB::beginTransaction();
@@ -94,10 +101,11 @@ class AduanTindakLanjutController extends Controller
                 ->with('success', 'Tindak lanjut berhasil dihapus.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error('Gagal hapus tindak lanjut: ' . $th->getMessage());
 
             return redirect()
                 ->back()
-                ->with('error', $th->getMessage());
+                ->with('error', 'Gagal menghapus tindak lanjut. Silakan coba lagi.');
         }
     }
 }

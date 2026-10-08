@@ -54,11 +54,12 @@ class MenuItemController extends Controller
      */
     public function store(StoreMenuItemRequest $request, MenuGroup $menu)
     {
+        $validated = $request->validated();
         MenuItem::create(array_merge(
-            $request->all(),
+            $validated,
             array(
                 'menu_group_id' => $menu->id,
-                'status' => ! blank($request->status) ? true : false,
+                'status' => ! blank($validated['status'] ?? null) ? true : false,
                 'position' => $menu->items()->max('position') + 1
             )
         ));
@@ -88,11 +89,12 @@ class MenuItemController extends Controller
     {
         // dd($menu->id, $menuItem, $id);
         $menuItemId = $menuItem->findOrFail($id);
+        $validated = $request->validated();
         $menuItemId->update(array_merge(
-            $request->all(),
+            $validated,
             array(
                 'menu_group_id' => $menu->id,
-                'status' => ! blank($request->status) ? true : false
+                'status' => ! blank($validated['status'] ?? null) ? true : false
             )
         ));
 

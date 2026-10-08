@@ -383,6 +383,7 @@ class AduanController extends Controller
     {
         $request->validate([
             'kategori' => 'nullable|string|max:100',
+            // NOTE: kandidat duplikat di bawah dibatasi milik sendiri untuk non-petugas (anti-intip).
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'kecamatan_id' => 'nullable|integer',
@@ -421,7 +422,7 @@ class AduanController extends Controller
         $rules = [
             'kategori' => 'required|string|in:' . implode(',', Aduan::KATEGORI),
             'judul' => 'required|string|max:255',
-            'isi_aduan' => 'required|string',
+            'isi_aduan' => 'required|string|max:10000',
             'lokasi' => 'nullable|string|max:255',
             'kecamatan_id' => 'nullable|exists:kecamatans,id',
             'kelurahan_id' => 'nullable|exists:kelurahans,id',
@@ -537,7 +538,7 @@ class AduanController extends Controller
         $rules = [
             'kategori' => 'required|string|in:' . implode(',', Aduan::KATEGORI),
             'judul' => 'required|string|max:255',
-            'isi_aduan' => 'required|string',
+            'isi_aduan' => 'required|string|max:10000',
             'lokasi' => 'nullable|string|max:255',
             'kecamatan_id' => 'nullable|exists:kecamatans,id',
             'kelurahan_id' => 'nullable|exists:kelurahans,id',

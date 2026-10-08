@@ -37,7 +37,7 @@
 </head>
 <body>
 <div class="footer">
-    <table style="width:100%; border-collapse:collapse;"><tr><td>Laporan Audit Log — DBMSDA Kota Bekasi</td><td style="text-align:right;">Halaman <span class="pagenum"></span></td></tr></table>
+    <table style="width:100%; border-collapse:collapse;"><tr><td>Laporan Audit Log — Pemerintah Kota Bekasi Kota Bekasi</td><td style="text-align:right;">Halaman <span class="pagenum"></span></td></tr></table>
 </div>
 
 <table class="kop-table">
@@ -66,7 +66,7 @@
 </table>
 
 <div class="filter-box">
-    <strong>Catatan:</strong> Laporan ini dihasilkan otomatis dari <em>Audit Log</em> DBMSDA. Setiap perubahan data (created/updated/deleted/restored) tercatat beserta pengguna, IP, dan waktu untuk keperluan audit &amp; e-sign.
+    <strong>Catatan:</strong> Laporan ini dihasilkan otomatis dari <em>Audit Log</em> Pemerintah Kota Bekasi. Setiap perubahan data (created/updated/deleted/restored) tercatat beserta pengguna, IP, dan waktu untuk keperluan audit &amp; e-sign.
 </div>
 
 <div class="section-title">DAFTAR AKTIVITAS ({{ number_format($total) }})</div>
@@ -116,7 +116,7 @@
         <td>
             <div class="esign">
                 <strong>E-Sign / Verifikasi:</strong><br>
-                Dokumen ini dicetak otomatis dari sistem DBMSDA. Keaslian dapat diverifikasi dengan mencocokkan waktu cetak &amp; filter di atas dengan data di menu <em>Keamanan &gt; Audit Log</em>.<br>
+                Dokumen ini dicetak otomatis dari sistem Pemerintah Kota Bekasi. Keaslian dapat diverifikasi dengan mencocokkan waktu cetak &amp; filter di atas dengan data di menu <em>Keamanan &gt; Audit Log</em>.<br>
                 Hash: {{ md5($waktuCetak . $total . $periode) }}
             </div>
         </td>

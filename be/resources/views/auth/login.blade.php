@@ -78,8 +78,8 @@
         <img src="{{ asset('img/auth-login.png') }}" class="auth-brand-illust" alt="Ilustrasi Halaman Login" decoding="async" aria-hidden="true">
 
         <div class="auth-brand-content">
-            <a href="#" class="auth-brand-mark" aria-label="Beranda DBMSDA">
-                <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo DBMSDA Kota Bekasi" decoding="async">
+            <a href="#" class="auth-brand-mark" aria-label="Beranda Pemerintah Kota Bekasi">
+                <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo Pemerintah Kota Bekasi" decoding="async">
             </a>
 
             <h1 class="auth-brand-headline">
@@ -305,7 +305,7 @@
             <div class="auth-footer">
                 <small>
                     © {{ date('Y') }}
-                    <a href="#">DBMSDA Kota Bekasi.</a>
+                    <a href="#">Pemerintah Kota Bekasi.</a>
                     {{ __('login.footer_rights') }}
                 </small>
             </div>

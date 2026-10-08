@@ -27,7 +27,7 @@
         <div class="d-flex">
             <i class="bi-bell-fill text-white fs-1 me-3 flex-shrink-0 align-self-start"></i>
             <div class="text-white mt-0">
-                Lihat informasi dan jawaban seputar layanan <strong>Dinas Bina Marga dan Sumber Daya Air Kota Bekasi</strong>.<br>
+                Lihat informasi dan jawaban seputar layanan <strong>Pemerintah Kota Bekasi</strong>.<br>
                 Panduan ini membantu masyarakat memahami layanan serta program yang tersedia.
             </div>
         </div>
@@ -102,7 +102,7 @@
                             @can('faq.destroy')<td class="text-center"><input type="checkbox" class="form-check-input faq-check" value="{{ $item->uuid }}"></td>@endcan
                             <td>{{ $loop->iteration }}</td>
                             <td style="min-width:200px;"><span class="fw-semibold">{{ Str::limit($item->pertanyaan, 70) }}</span></td>
-                            <td class="hide-xs"><span class="badge bg-primary-subtle text-primary">{{ $item->kategori ?? '—' }}</span></td>
+                            <td class="hide-xs"><span class="badge bg-primary-subtle text-primary">{{ $item->kategori instanceof \BackedEnum ? $item->kategori->label() : ($item->kategori ?? '—') }}</span></td>
                             <td class="hide-xs">{{ $item->urutan }}</td>
                             <td>
                                 <span class="badge {{ $item->status === 'active' ? 'bg-success' : 'bg-secondary' }}">

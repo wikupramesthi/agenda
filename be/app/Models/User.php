@@ -29,12 +29,11 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<int, string>
      */
     protected $fillable = [
-        'uuid',
         'avatar',
         'name',
         'password',
-        'email_verified_at',
         'email',
+        'google_id',
         'no_hp',
         'alamat',
         'kecamatan_id',
@@ -43,7 +42,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'tanggal_lahir',
         'jenis_kelamin',
         'agama',
-        'is_active',
         'sumber_informasi',
     ];
 

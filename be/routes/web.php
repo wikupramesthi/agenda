@@ -76,11 +76,6 @@ Route::get('/lang/{locale}', function ($locale) {
     return redirect()->back();
 })->name('lang.switch');
 
-// Test route
-Route::get('/test-captcha', function () {
-    return 'Test captcha route works!';
-})->name('test.captcha');
-
 // Socialite Routes GOOGLE
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('googleAuth');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
@@ -106,18 +101,18 @@ Route::middleware('auth')->group(function () {
         $request->session()->put('last_activity', time());
         return response()->json(['ok' => true]);
     })->name('keep-alive');
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return response()->json(['success' => true]);
+    })->name('notifications.read');
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
+    })->name('notifications.readAll');
 });
 
-Route::post('/notifications/{id}/read', function ($id) {
-    $notification = auth()->user()->notifications()->findOrFail($id);
-    $notification->markAsRead();
-    return response()->json(['success' => true]);
-})->name('notifications.read');
 
-Route::post('/notifications/read-all', function () {
-    auth()->user()->unreadNotifications->markAsRead();
-    return response()->json(['success' => true]);
-})->name('notifications.readAll');
 
 
 Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'], function () {
@@ -125,6 +120,8 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
     // $user = 'role:user';
     Route::post('/dashboard/sumber-informasi', [DashboardController::class, 'submitSumber'])->name('dashboard.submitSumber');
     Route::get('/dashboard/device-stats', [DashboardController::class, 'deviceStats'])->name('dashboard.device-stats');
+    Route::get('/dashboard/analytics', [\App\Http\Controllers\Dashboard\AnalyticsReportController::class, 'preview'])->name('dashboard.analytics.preview');
+    Route::get('/dashboard/analytics/pdf', [\App\Http\Controllers\Dashboard\AnalyticsReportController::class, 'download'])->name('dashboard.analytics.pdf');
     Route::get('/search', [SearchController::class, 'index'])->name('global.search');
     Route::resource('dashboard', DashboardController::class)->only('index');
     Route::resource('user', UserController::class)->middleware($superAdmin)->only('index', 'store', 'update', 'destroy');
@@ -133,27 +130,29 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
     Route::resource('role', RoleController::class)->middleware([$superAdmin])->only('index', 'store', 'update', 'destroy');
     Route::resource('menu', MenuGroupController::class)->middleware($superAdmin)->only('index', 'store', 'update', 'destroy');
     Route::resource('menu.item', MenuItemController::class)->middleware($superAdmin)->only('index', 'store', 'update', 'destroy');
-    Route::delete('faq/bulk', [FaqController::class, 'bulkDestroy'])->name('faq.bulkDestroy');
-    Route::resource('faq', FaqController::class);
-    Route::get('banner/media', [BannerController::class, 'loadMore'])->name('banner.loadMore');
-    Route::get('banner/foto-picker', [BannerController::class, 'fotoPicker'])->name('banner.fotoPicker');
-    Route::get('banner/album-fotos/{album}', [BannerController::class, 'albumFotos'])->name('banner.albumFotos');
-    Route::get('banner/modal/{tipe}/{uuid}', [BannerController::class, 'modal'])->whereIn('tipe', ['foto', 'video', 'album', 'view-album'])->name('banner.modal');
-    Route::resource('banner', BannerController::class);
-    Route::post('banner/album', [BannerController::class, 'storeAlbum'])->name('banner.storeAlbum');
-    Route::put('banner/album/{album}', [BannerController::class, 'updateAlbum'])->name('banner.updateAlbum');
-    Route::delete('banner/album/{album}', [BannerController::class, 'destroyAlbum'])->name('banner.destroyAlbum');
-    Route::resource('categories', CategoryController::class);
+    Route::delete('faq/bulk', [FaqController::class, 'bulkDestroy'])->middleware('role:admin|super-admin')->name('faq.bulkDestroy');
+    Route::resource('faq', FaqController::class)->middleware('role:admin|super-admin');
+    Route::middleware('role:admin|super-admin')->group(function () {
+        Route::get('banner/media', [BannerController::class, 'loadMore'])->name('banner.loadMore');
+        Route::get('banner/foto-picker', [BannerController::class, 'fotoPicker'])->name('banner.fotoPicker');
+        Route::get('banner/album-fotos/{album}', [BannerController::class, 'albumFotos'])->name('banner.albumFotos');
+        Route::get('banner/modal/{tipe}/{uuid}', [BannerController::class, 'modal'])->whereIn('tipe', ['foto', 'video', 'album', 'view-album'])->name('banner.modal');
+        Route::resource('banner', BannerController::class);
+        Route::post('banner/album', [BannerController::class, 'storeAlbum'])->name('banner.storeAlbum');
+        Route::put('banner/album/{album}', [BannerController::class, 'updateAlbum'])->name('banner.updateAlbum');
+        Route::delete('banner/album/{album}', [BannerController::class, 'destroyAlbum'])->name('banner.destroyAlbum');
+    });
+    Route::resource('categories', CategoryController::class)->middleware('role:admin|super-admin');
     Route::delete('agendas/bulk', [AgendaController::class, 'bulkDestroy'])->name('agendas.bulkDestroy');
     Route::post('agendas/{agenda}/approve', [AgendaController::class, 'approve'])->name('agendas.approve');
     Route::post('agendas/{agenda}/reject', [AgendaController::class, 'reject'])->name('agendas.reject');
     Route::resource('agendas', AgendaController::class);
     Route::resource('account', AccountController::class);
     Route::get('/get-kelurahan/{kecamatan_id}', [AccountController::class, 'getKelurahan']);
-    Route::resource('poll', PollController::class);
-    Route::resource('pages', PagesController::class);
-    Route::delete('services/bulk', [ServiceController::class, 'bulkDestroy'])->name('services.bulkDestroy');
-    Route::resource('services', ServiceController::class)->except(['show']);
+    Route::resource('poll', PollController::class)->middleware('role:admin|super-admin');
+    Route::resource('pages', PagesController::class)->middleware('role:admin|super-admin');
+    Route::delete('services/bulk', [ServiceController::class, 'bulkDestroy'])->middleware('role:admin|super-admin')->name('services.bulkDestroy');
+    Route::resource('services', ServiceController::class)->except(['show'])->middleware('role:admin|super-admin');
     Route::get('aduans/kelurahan/{kecamatan_id}', [AduanController::class, 'getKelurahan'])->name('aduans.kelurahan');
     Route::get('aduans/cek-duplikat', [AduanController::class, 'cekDuplikat'])->name('aduans.cekDuplikat');
     Route::get('aduans/export-pdf', [AduanController::class, 'exportPdf'])->name('aduans.exportPdf');
@@ -169,23 +168,23 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
     Route::post('aduans/bulk-destroy', [AduanController::class, 'bulkDestroy'])->name('aduans.bulkDestroy');
     Route::post('aduans/bulk-restore', [AduanController::class, 'bulkRestore'])->name('aduans.bulkRestore');
     Route::resource('aduans', AduanController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
-    Route::delete('documents/bulk', [DocumentController::class, 'bulkDestroy'])->name('documents.bulkDestroy');
-    Route::resource('documents', DocumentController::class);
-    Route::delete('document-categories/bulk', [DocumentCategoryController::class, 'bulkDestroy'])->name('document-categories.bulkDestroy');
-    Route::resource('document-categories', DocumentCategoryController::class);
-    Route::get('pengguna', [PenggunaController::class, 'index'])->name('pengguna.index');
-    Route::get('/pengguna/export', [PenggunaController::class, 'export'])->name('pengguna.export');
+    Route::delete('documents/bulk', [DocumentController::class, 'bulkDestroy'])->middleware('role:admin|super-admin')->name('documents.bulkDestroy');
+    Route::resource('documents', DocumentController::class)->middleware('role:admin|super-admin');
+    Route::delete('document-categories/bulk', [DocumentCategoryController::class, 'bulkDestroy'])->middleware('role:admin|super-admin')->name('document-categories.bulkDestroy');
+    Route::resource('document-categories', DocumentCategoryController::class)->middleware('role:admin|super-admin');
+    Route::get('pengguna', [PenggunaController::class, 'index'])->middleware('role:admin|super-admin')->name('pengguna.index');
+    Route::get('/pengguna/export', [PenggunaController::class, 'export'])->middleware('role:admin|super-admin')->name('pengguna.export');
 
     // end payment
 
-    Route::get('kontak', [FaqController::class, 'kontak'])->name('layanan.kontak');
+    Route::get('kontak', [FaqController::class, 'kontak'])->middleware('role:admin|super-admin')->name('layanan.kontak');
     Route::delete(
         '/kontak/{uuid}',
         [FaqController::class, 'forceDelete']
-    )->name('kontak.destroy');
-    Route::patch('/pages/{uuid}/sidebar', [PagesController::class, 'updateSidebar'])->name('pages.updateSidebar');
+    )->middleware('role:admin|super-admin')->name('kontak.destroy');
+    Route::patch('/pages/{uuid}/sidebar', [PagesController::class, 'updateSidebar'])->middleware('role:admin|super-admin')->name('pages.updateSidebar');
 
-    Route::prefix('security')->name('security.')->group(function () {
+    Route::prefix('security')->name('security.')->middleware('role:admin|super-admin')->group(function () {
         Route::get('login-activity', [LoginActivityController::class, 'index'])->name('login-activity.index');
         Route::delete('login-activity/bulk', [LoginActivityController::class, 'bulkDestroy'])->name('login-activity.bulkDestroy');
         Route::delete('login-activity/clear', [LoginActivityController::class, 'clear'])->name('login-activity.clear');
@@ -206,8 +205,6 @@ Route::group(['middleware' => ['web', 'auth', 'verified'], 'prefix' => 'backend'
         Route::delete('failed-login/clear', [FailedLoginController::class, 'clear'])->name('failed-login.clear');
         Route::delete('failed-login/{failedLogin}', [FailedLoginController::class, 'destroy'])->name('failed-login.destroy');
     });
-
-    // Route::get('list-menu', [MenuGroupController::class, 'listMenu'])->name('list-menu');
 
     Route::resource('website-menu', WebsiteMenuController::class)
         ->middleware('role:admin|super-admin')

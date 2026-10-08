@@ -56,14 +56,19 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        // dd($request->all());
-        User::create(array_merge(
-            $request->all(),
-            array(
-                'password' => Hash::make('password'),
-                'email_verified_at' => ! blank($request->verified) ? now() : null,
-            )
-        ))?->assignRole(! blank($request->role) ? $request->role : array());
+        $validated = $request->validated();
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make('password'),
+        ]);
+
+        $user->forceFill([
+            'email_verified_at' => ! empty($validated['verified']) ? now() : null,
+        ])->save();
+
+        $user->assignRole($validated['role'] ?? []);
 
         return back()->with('success', 'User has been created successfully!');
     }
@@ -89,19 +94,15 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        $user->syncRoles($request->role);
+        $validated = $request->validated();
 
-        $emailExists = User::firstWhere('email', $request->email) !== null;
-        $isSameEmail = $request->email === $user->email;
+        $user->syncRoles($validated['role'] ?? []);
 
-        $email = $isSameEmail || ! $emailExists ? $request->email : null;
-
-        if ($email) {
-            $user->update([
-                'email' => $email,
-                'email_verified_at' => $request->verified ? now() : null,
-            ] + $request->except('email'));
-        }
+        $user->forceFill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'email_verified_at' => ! empty($validated['verified']) ? now() : null,
+        ])->save();
 
         return back()->with('success', 'User has been updated successfully!');
     }

@@ -43,9 +43,10 @@ class RouteController extends Controller
      */
     public function store(StoreRouteRequest $request)
     {
+        $validated = $request->validated();
         Route::create(array_merge(
-            $request->all(),
-            array('status' => ! blank($request->status) ? true : false)
+            $validated,
+            array('status' => ! blank($validated['status'] ?? null) ? true : false)
         ));
 
         return back()->with('success', 'Route has been created successfully!');
@@ -72,9 +73,10 @@ class RouteController extends Controller
      */
     public function update(UpdateRouteRequest $request, Route $route)
     {
+        $validated = $request->validated();
         $route->update(array_merge(
-            $request->all(),
-            array('status' => ! blank($request->status) ? true : false)
+            $validated,
+            array('status' => ! blank($validated['status'] ?? null) ? true : false)
         ));
 
         return back()->with('success', 'Route has been updated successfully!');

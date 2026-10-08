@@ -22,9 +22,9 @@ class StoreUserRequest extends FormRequest
     public function rules() : array
     {
         return [
-            'name' => ['required', 'string'],
-            'email' => ['required', 'string', 'email:rfc', 'unique:users'],
-            'role' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc', 'max:255', 'unique:users,email'],
+            'role' => ['required', 'string', \Illuminate\Validation\Rule::exists('roles', 'name')],
             'verified' => ['nullable', 'boolean'],
         ];
     }

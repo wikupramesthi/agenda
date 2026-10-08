@@ -22,9 +22,9 @@ class WebsiteIdentityController extends Controller
             if (! $identity) {
                 // fallback default agar FE tidak 404 saat belum diisi admin
                 $identity = WebsiteIdentity::create([
-                    'site_name' => config('app.name', 'DBMSDA Kota Bekasi'),
-                    'site_title' => 'DBMSDA Kota Bekasi',
-                    'tagline' => 'Dinas Bina Marga dan Sumber Daya Air Kota Bekasi',
+                    'site_name' => config('app.name', 'Pemerintah Kota Bekasi'),
+                    'site_title' => 'Pemerintah Kota Bekasi',
+                    'tagline' => 'Pemerintah Kota Bekasi',
                 ]);
             }
 

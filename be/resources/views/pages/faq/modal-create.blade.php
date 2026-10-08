@@ -37,11 +37,11 @@
                         <label for="kategori" class="mb-2">Kategori</label>
                         <select name="kategori" id="kategori" class="form-control @error('kategori') is-invalid @enderror">
                             <option value="">-- Tanpa Kategori --</option>
-                            <option value="informasi-umum" {{ old('kategori')==='informasi-umum'?'selected':'' }}>Informasi Umum</option>
-                            <option value="layanan" {{ old('kategori')==='layanan'?'selected':'' }}>Layanan</option>
-                            <option value="infrastruktur-pemeliharaan" {{ old('kategori')==='infrastruktur-pemeliharaan'?'selected':'' }}>Infrastruktur & Pemeliharaan</option>
-                            <option value="pengaduan-permohonan" {{ old('kategori')==='pengaduan-permohonan'?'selected':'' }}>Pengaduan & Permohonan</option>
-                            <option value="program-kegiatan" {{ old('kategori')==='program-kegiatan'?'selected':'' }}>Program & Kegiatan</option>
+                            <option value="tentang-agenda" {{ old('kategori')==='tentang-agenda'?'selected':'' }}>Tentang Agenda</option>
+                            <option value="jadwal" {{ old('kategori')==='jadwal'?'selected':'' }}>Jadwal</option>
+                            <option value="lokasi" {{ old('kategori')==='lokasi'?'selected':'' }}>Lokasi</option>
+                            <option value="publikasi" {{ old('kategori')==='publikasi'?'selected':'' }}>Publikasi</option>
+                            <option value="lainnya" {{ old('kategori')==='lainnya'?'selected':'' }}>Lainnya</option>
                         </select>
                         @error('kategori')
                             <div class="invalid-feedback">

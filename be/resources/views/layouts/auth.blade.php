@@ -6,12 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title')</title>
 
-    <meta name="title" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+    <meta name="title" content="Pemerintah Kota Bekasi">
     <meta name="description"
-        content="Website resmi Dinas Bina Marga dan Sumber Daya Air Kota Bekasi. Informasi pembangunan dan pemeliharaan jalan, jembatan, drainase, serta pengelolaan sumber daya air di Kota Bekasi.">
+        content="Website resmi Pemerintah Kota Bekasi. Informasi pembangunan dan pemeliharaan jalan, jembatan, drainase, serta pengelolaan sumber daya air di Kota Bekasi.">
     <meta name="keywords"
-        content="Dinas Bina Marga Kota Bekasi, Dinas Sumber Daya Air Kota Bekasi, DBMSDA Kota Bekasi, Bina Marga Bekasi, jalan Kota Bekasi, jembatan Kota Bekasi, drainase Kota Bekasi, sumber daya air Bekasi, infrastruktur Kota Bekasi">
-    <meta name="author" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+        content="Pemerintah Kota Bekasi, Bina Marga Bekasi, jalan Kota Bekasi, jembatan Kota Bekasi, drainase Kota Bekasi, sumber daya air Bekasi, infrastruktur Kota Bekasi">
+    <meta name="author" content="Pemerintah Kota Bekasi">
     <meta name="robots" content="index, follow">
     <meta name="language" content="Indonesian">
     <meta name="revisit-after" content="7 days">
@@ -20,31 +20,32 @@
     <link rel="canonical" href="{{ url()->current() }}">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+    <meta property="og:title" content="Pemerintah Kota Bekasi">
     <meta property="og:description"
-        content="Website resmi Dinas Bina Marga dan Sumber Daya Air Kota Bekasi yang menyediakan informasi pembangunan dan pemeliharaan jalan, jembatan, drainase, serta pengelolaan sumber daya air.">
+        content="Website resmi Pemerintah Kota Bekasi yang menyediakan informasi pembangunan dan pemeliharaan jalan, jembatan, drainase, serta pengelolaan sumber daya air.">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+    <meta property="og:site_name" content="Pemerintah Kota Bekasi">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:locale" content="id_ID">
     <meta property="og:image" content="{{ asset('img/seamless-pattern3.png') }}">
-    <meta property="og:image:alt" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+    <meta property="og:image:alt" content="Pemerintah Kota Bekasi">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Dinas Bina Marga dan Sumber Daya Air Kota Bekasi">
+    <meta name="twitter:title" content="Pemerintah Kota Bekasi">
     <meta name="twitter:description"
-        content="Website resmi Dinas Bina Marga dan Sumber Daya Air Kota Bekasi untuk informasi infrastruktur jalan, jembatan, drainase, dan sumber daya air.">
+        content="Website resmi Pemerintah Kota Bekasi untuk informasi infrastruktur jalan, jembatan, drainase, dan sumber daya air.">
     <meta name="twitter:image" content="{{ asset('img/seamless-pattern3.png') }}">
 
     <!-- Theme & Mobile -->
     <meta name="theme-color" content="#0d6efd">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Dinas Bina Marga dan SDA Kota Bekasi">
+    <meta name="apple-mobile-web-app-title" content="Pemerintah Kota Bekasi, Bina Marga Bekasi">
 
     <link rel="shortcut icon" href="{{ asset('img/fav.png') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('dist/assets/compiled/css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/btn-soft.css') }}?v={{ \Illuminate\Support\Facades\File::exists(public_path('css/btn-soft.css')) ? filemtime(public_path('css/btn-soft.css')) : '1' }}" />
 
     <meta name="theme-color" content="#273049">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,7 +60,7 @@
     <div class="authentication-wrapper authentication-cover auth-2026">
         <!-- Logo (mobile) -->
         <a href="#" class="auth-cover-brand auth-cover-brand-top auth-logo d-lg-none">
-              <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo DBMSDA Kota Bekasi" decoding="async">
+              <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo Pemerintah Kota Bekasi" decoding="async">
         </a>
 
         @yield('content')

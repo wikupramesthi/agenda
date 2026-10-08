@@ -120,8 +120,8 @@ private const IMAGE_DISK = 'public';
                 'video'         => $validated['video'] ?? null,
                 'status'        => $status,
                 'search_engine' => $validated['search_engine'],
-                'is_featured'   => $request->boolean('is_featured'),
-                'is_popular'    => $request->boolean('is_popular'),
+                'is_featured'   => $this->isApprover($request->user()) && $request->boolean('is_featured'),
+                'is_popular'    => $this->isApprover($request->user()) && $request->boolean('is_popular'),
             ]);
 
             if ($request->hasFile('featured_image')) {
@@ -160,18 +160,15 @@ private const IMAGE_DISK = 'public';
     /**
      * Display the specified agenda.
      */
-    public function show(string $slug): View
+    public function show(string $slug): RedirectResponse
     {
-        $agenda = Agenda::with('images')->where('slug', $slug)->firstOrFail();
+        // Belum ada halaman detail publik/internal; arahkan ke halaman kelola.
+        // Non-admin hanya boleh mengakses slug miliknya (404 seragam, anti-oracle).
+        $agenda = Agenda::where('slug', $slug)
+            ->when(! $this->isApprover(), fn ($q) => $q->where('user_uuid', auth()->user()->uuid))
+            ->firstOrFail();
 
-        $sessionKey = 'agenda_viewed_' . $agenda->uuid;
-
-        if (! session()->has($sessionKey)) {
-            $agenda->incrementViews();
-            session()->put($sessionKey, true);
-        }
-
-        return view('agendas.show', compact('agenda'));
+        return redirect()->route('agendas.edit', $agenda->uuid);
     }
 
     /**
@@ -230,8 +227,8 @@ private const IMAGE_DISK = 'public';
                 'video'         => $validated['video'] ?? null,
                 'status'        => $status,
                 'search_engine' => $validated['search_engine'],
-                'is_featured'   => $request->boolean('is_featured'),
-                'is_popular'    => $request->boolean('is_popular'),
+                'is_featured'   => $this->isApprover($request->user()) ? $request->boolean('is_featured') : $agenda->is_featured,
+                'is_popular'    => $this->isApprover($request->user()) ? $request->boolean('is_popular') : $agenda->is_popular,
             ])->save();
 
             // kumpulkan path yang akan dihapus dulu, hapus file setelah commit
@@ -314,6 +311,8 @@ private const IMAGE_DISK = 'public';
      */
     public function approve(Agenda $agenda): RedirectResponse
     {
+        abort_unless($this->isApprover(), 403, 'Hanya admin yang dapat menyetujui agenda.');
+
         if ($agenda->status !== 'pending') {
             return back()->with('error', 'Hanya agenda berstatus pending yang bisa disetujui.');
         }
@@ -330,6 +329,8 @@ private const IMAGE_DISK = 'public';
      */
     public function reject(Agenda $agenda): RedirectResponse
     {
+        abort_unless($this->isApprover(), 403, 'Hanya admin yang dapat menolak agenda.');
+
         if ($agenda->status !== 'pending') {
             return back()->with('error', 'Hanya agenda berstatus pending yang bisa ditolak.');
         }
@@ -346,6 +347,10 @@ private const IMAGE_DISK = 'public';
      */
     public function destroy(Agenda $agenda): RedirectResponse
     {
+        if (! $this->isApprover() && $agenda->user_uuid !== auth()->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke agenda ini.');
+        }
+
         $featured = $agenda->featured_image;
         $imagePaths = $agenda->images()->pluck('image_path')->all();
 
@@ -384,7 +389,10 @@ private const IMAGE_DISK = 'public';
 
         $ids = array_slice(array_values(array_unique(array_filter($ids))), 0, 100);
 
-        $agendas = Agenda::with('images')->whereIn('uuid', $ids)->get();
+        $agendas = Agenda::with('images')
+            ->whereIn('uuid', $ids)
+            ->when(! $this->isApprover($request->user()), fn ($q) => $q->where('user_uuid', $request->user()->uuid))
+            ->get();
 
         if ($agendas->isEmpty()) {
             return back()->with('error', 'Data yang dipilih tidak ditemukan.');

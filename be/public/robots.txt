@@ -1,4 +1,4 @@
 ﻿User-agent: *
 Allow: /
-Sitemap: https://dbmsda.bekasikota.go.id/sitemap.xml
+Sitemap: https://bekasikota.bekasikota.go.id/sitemap.xml
 

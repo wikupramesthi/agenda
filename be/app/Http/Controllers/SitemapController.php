@@ -91,16 +91,16 @@ class SitemapController extends Controller
 
     private function baseUrl(): string
     {
-        // Prefer APP_URL, fallback ke request origin, then dbmsda domain
+        // Prefer APP_URL, fallback ke request origin, then bekasikota domain
         $appUrl = config('app.url') ?: URL::to('/');
         $base = rtrim($appUrl, '/');
         // pastikan https untuk SEO jika APP_URL masih http localhost di prod
         if (app()->environment('production') && str_starts_with($base, 'http://')) {
             $base = 'https://' . substr($base, 7);
         }
-        // fallback domain DBMSDA jika masih localhost
+        // fallback domain Bekasikota jika masih localhost
         if (str_contains($base, 'localhost') || str_contains($base, '127.0.0.1')) {
-            $base = 'https://dbmsda.bekasikota.go.id';
+            $base = 'https://bekasikota.bekasikota.go.id';
         }
         return $base;
     }

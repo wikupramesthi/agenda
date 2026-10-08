@@ -3,11 +3,11 @@
 return [
     // Brand panel
     'brand_welcome' => 'Selamat Datang di',
-    'brand_portal' => 'Portal DBMSDA Kota Bekasi',
-    'brand_tagline' => 'Akses informasi, data, dan layanan digital Dinas Bina Marga dan Sumber Daya Air Kota Bekasi dalam satu portal yang terintegrasi.',
-    'brand_point_1' => 'Portal resmi Dinas Bina Marga dan Sumber Daya Air Kota Bekasi',
+    'brand_portal' => 'Portal Pemerintah Kota Bekasi',
+    'brand_tagline' => 'Akses informasi, data, dan layanan digital Pemerintah Kota Bekasi dalam satu portal yang terintegrasi.',
+    'brand_point_1' => 'Portal resmi Pemerintah Kota Bekasi',
     'brand_point_2' => 'Akses informasi dan data secara terintegrasi',
-    'brand_point_3' => 'Akses layanan dan aplikasi digital DBMSDA',
+    'brand_point_3' => 'Akses layanan dan aplikasi digital Pemerintah Kota Bekasi',
 
     // Form heading
     'heading' => 'Silahkan masuk untuk melanjutkan.',
@@ -54,12 +54,12 @@ return [
 
     // Help popup
     'help_title' => 'Bantuan Login',
-    'help_subtitle' => 'Pusat Bantuan Portal DBMSDA Kota Bekasi',
+    'help_subtitle' => 'Pusat Bantuan Portal Pemerintah Kota Bekasi',
     'help_how_to' => 'Cara Masuk',
-    'help_how_to_desc' => 'Masukkan email atau akun yang telah terdaftar beserta password, kemudian klik <b>"Masuk Sekarang"</b> untuk mengakses portal DBMSDA.',
+    'help_how_to_desc' => 'Masukkan email atau akun yang telah terdaftar beserta password, kemudian klik <b>"Masuk Sekarang"</b> untuk mengakses portal Pemerintah Kota Bekasi.',
     'help_forgot_title' => 'Lupa Password',
     'help_forgot_desc' => 'Jika lupa password, pilih <b>"Lupa Password?"</b> dan ikuti petunjuk pemulihan akun menggunakan email yang telah terdaftar.',
     'help_trouble' => 'Kendala Akses',
-    'help_trouble_desc' => 'Apabila mengalami kendala saat login atau akun tidak dapat digunakan, silakan hubungi Helpdesk/Administrator DBMSDA untuk mendapatkan bantuan.',
+    'help_trouble_desc' => 'Apabila mengalami kendala saat login atau akun tidak dapat digunakan, silakan hubungi Helpdesk/Administrator Pemerintah Kota Bekasi untuk mendapatkan bantuan.',
     'help_footer' => 'Pastikan data akun yang digunakan benar dan jangan membagikan password kepada pihak lain.',
 ];

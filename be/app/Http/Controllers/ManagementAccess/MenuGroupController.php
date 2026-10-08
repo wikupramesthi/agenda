@@ -43,10 +43,11 @@ class MenuGroupController extends Controller
      */
     public function store(StoreMenuGroupRequest $request)
     {
+        $validated = $request->validated();
         MenuGroup::create(array_merge(
-            $request->all(),
+            $validated,
             array(
-                'status' => ! blank($request->status) ? true : false,
+                'status' => ! blank($validated['status'] ?? null) ? true : false,
                 'position' => MenuGroup::max('position') + 1
             ),
         ));
@@ -75,7 +76,7 @@ class MenuGroupController extends Controller
      */
     public function update(UpdateMenuGroupRequest $request, MenuGroup $menuGroup, $id)
     {
-        $data = $request->all();
+        $data = $request->validated();
         $data['status'] = ! blank($data['status'] ?? null) ? true : false;
         $findId = $menuGroup->find($id);
         $findId->update($data);

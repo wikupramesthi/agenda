@@ -93,7 +93,7 @@ class PenggunaController extends Controller
 
     public function export(Request $request)
     {
-        return Excel::download(new PenggunaExport($request), 'pengguna-dbmsda.xlsx');
+        return Excel::download(new PenggunaExport($request), 'pengguna-bekasikota.xlsx');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\HandlesTransactions;
 use App\Models\Faq;
+use App\Services\HtmlSanitizer;
 use App\Models\Kontak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -51,8 +52,8 @@ class FaqController extends Controller
     {
         $request->validate([
             'pertanyaan' => 'required|string|max:255',
-            'jawaban'    => 'required|string',
-            'kategori'   => 'nullable|in:informasi-umum,layanan,infrastruktur-pemeliharaan,pengaduan-permohonan,program-kegiatan',
+            'jawaban'    => 'required|string|max:20000',
+            'kategori'   => 'nullable|in:tentang-agenda,jadwal,lokasi,publikasi,lainnya',
             'status' => 'required|in:active,inactive',
             'urutan' => 'required|integer|min:1|unique:faqs,urutan',
         ]);
@@ -61,7 +62,7 @@ class FaqController extends Controller
             Faq::create([
                 'uuid' => (string) Str::uuid(),
                 'pertanyaan'  => $request->pertanyaan,
-                'jawaban'     => $request->jawaban,
+                'jawaban'     => HtmlSanitizer::clean($request->jawaban),
                 'kategori'    => $request->kategori,
                 'status'      => $request->status,
                 'urutan'      => $request->urutan,
@@ -93,8 +94,8 @@ class FaqController extends Controller
     {
         $request->validate([
             'pertanyaan' => 'required|string|max:255',
-            'jawaban'    => 'required|string',
-            'kategori'   => 'nullable|in:informasi-umum,layanan,infrastruktur-pemeliharaan,pengaduan-permohonan,program-kegiatan',
+            'jawaban'    => 'required|string|max:20000',
+            'kategori'   => 'nullable|in:tentang-agenda,jadwal,lokasi,publikasi,lainnya',
             'urutan'     => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
         ]);
@@ -103,7 +104,7 @@ class FaqController extends Controller
             $item = Faq::where('uuid', $uuid)->firstOrFail();
             $item->update([
                 'pertanyaan' => $request->pertanyaan,
-                'jawaban'    => $request->jawaban,
+                'jawaban'    => HtmlSanitizer::clean($request->jawaban),
                 'kategori'   => $request->kategori,
                 'urutan'     => $request->urutan,
                 'status'     => $request->status,

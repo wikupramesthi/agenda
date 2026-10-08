@@ -15,9 +15,9 @@ class WebsiteIdentityController extends Controller
         $identity = WebsiteIdentity::first();
         if (! $identity) {
             $identity = WebsiteIdentity::create([
-                'site_name' => config('app.name', 'DBMSDA Kota Bekasi'),
-                'site_title' => 'DBMSDA Kota Bekasi',
-                'tagline' => 'Dinas Bina Marga dan Sumber Daya Air Kota Bekasi',
+                'site_name' => config('app.name', 'Pemerintah Kota Bekasi'),
+                'site_title' => 'Pemerintah Kota Bekasi',
+                'tagline' => 'Pemerintah Kota Bekasi',
             ]);
         }
 
@@ -36,8 +36,8 @@ class WebsiteIdentityController extends Controller
             'site_title' => 'required|string|max:255',
             'tagline' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:2000',
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
-            'favicon' => 'nullable|image|mimes:png,jpg,jpeg,ico,webp,svg|max:1024',
+            'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
+            'favicon' => 'nullable|image|mimes:png,jpg,jpeg,ico,webp|max:1024',
             'og_image' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:3072',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',

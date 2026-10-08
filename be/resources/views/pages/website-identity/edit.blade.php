@@ -34,11 +34,11 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Site Name <span class="text-danger">*</span></label>
-                                <input type="text" name="site_name" class="form-control" value="{{ old('site_name', $identity->site_name) }}" placeholder="DBMSDA Kota Bekasi" required>
+                                <input type="text" name="site_name" class="form-control" value="{{ old('site_name', $identity->site_name) }}" placeholder="Pemerintah Kota Bekasi" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Site Title <span class="text-danger">*</span></label>
-                                <input type="text" name="site_title" class="form-control" value="{{ old('site_title', $identity->site_title) }}" placeholder="Portal Resmi DBMSDA" required>
+                                <input type="text" name="site_title" class="form-control" value="{{ old('site_title', $identity->site_title) }}" placeholder="Portal Resmi Pemerintah Kota Bekasi" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Tagline</label>
@@ -61,7 +61,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email', $identity->email) }}" placeholder="info@dbmsda.bekasikota.go.id">
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $identity->email) }}" placeholder="info@bekasikota.bekasikota.go.id">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">No. Telepon / WA</label>
@@ -100,7 +100,7 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">Meta Title</label>
-                                <input type="text" name="meta_title" class="form-control" value="{{ old('meta_title', $identity->meta_title) }}" placeholder="DBMSDA Kota Bekasi - Portal Resmi">
+                                <input type="text" name="meta_title" class="form-control" value="{{ old('meta_title', $identity->meta_title) }}" placeholder="Pemerintah Kota Bekasi - Portal Resmi">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Meta Description</label>
@@ -108,7 +108,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Meta Keywords (pisahkan koma)</label>
-                                <input type="text" name="meta_keywords" class="form-control" value="{{ old('meta_keywords', $identity->meta_keywords) }}" placeholder="dbmsda, bekasi, bina marga">
+                                <input type="text" name="meta_keywords" class="form-control" value="{{ old('meta_keywords', $identity->meta_keywords) }}" placeholder="bekasikota, bekasi, bina marga">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Google Analytics ID</label>

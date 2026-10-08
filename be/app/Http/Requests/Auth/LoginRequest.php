@@ -104,6 +104,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Tolak akun yang dinonaktifkan (pesan generik anti-enumerasi).
+        if ((Auth::user()->is_active ?? 'active') === 'inactive') {
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

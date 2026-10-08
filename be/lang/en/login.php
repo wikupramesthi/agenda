@@ -3,11 +3,11 @@
 return [
     // Brand panel
     'brand_welcome' => 'Welcome to',
-    'brand_portal' => 'DBMSDA Portal of Bekasi City',
-    'brand_tagline' => 'Access information, data, and digital services of the Department of Highways and Water Resources of Bekasi City in one integrated portal.',
-    'brand_point_1' => 'Official portal of the Department of Highways and Water Resources of Bekasi City',
+    'brand_portal' => 'Bekasi City Government Portal',
+    'brand_tagline' => 'Access information, data, and digital services of the Bekasi City Government in one integrated portal.',
+    'brand_point_1' => 'Official portal of the Bekasi City Government',
     'brand_point_2' => 'Access integrated information and data',
-    'brand_point_3' => 'Access DBMSDA digital services and applications',
+    'brand_point_3' => 'Access Bekasi City Government digital services and applications',
 
     // Form heading
     'heading' => 'Sign in to your account to continue.',
@@ -54,12 +54,12 @@ return [
 
     // Help popup
     'help_title' => 'Login Help',
-    'help_subtitle' => 'DBMSDA Portal Help Center, Bekasi City',
+    'help_subtitle' => 'Bekasi City Government Portal Help Center',
     'help_how_to' => 'How to Sign In',
-    'help_how_to_desc' => 'Enter your registered email and password, then click <b>"Sign In Now"</b> to access the DBMSDA portal.',
+    'help_how_to_desc' => 'Enter your registered email and password, then click <b>"Sign In Now"</b> to access the Bekasi City Government portal.',
     'help_forgot_title' => 'Forgot Password',
     'help_forgot_desc' => 'If you forgot your password, click <b>"Forgot Password?"</b> and follow the recovery instructions using your registered email.',
     'help_trouble' => 'Access Issues',
-    'help_trouble_desc' => 'If you experience login issues or your account cannot be used, please contact the DBMSDA Helpdesk/Administrator for assistance.',
+    'help_trouble_desc' => 'If you experience login issues or your account cannot be used, please contact the Bekasi City Government Helpdesk/Administrator for assistance.',
     'help_footer' => 'Make sure your account credentials are correct and do not share your password with others.',
 ];

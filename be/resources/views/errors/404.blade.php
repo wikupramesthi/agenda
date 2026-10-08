@@ -8,8 +8,8 @@
         <div class="nf-blob nf-blob-c" aria-hidden="true"></div>
 
         <!-- Logo -->
-        <a href="#" class="nf-mast" aria-label="Beranda DBMSDA Kota Bekasi">
-            <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo DBMSDA Kota Bekasi" decoding="async">
+        <a href="#" class="nf-mast" aria-label="Beranda Pemerintah Kota Bekasi">
+            <img src="{{ asset('img/logo.png') }}" class="auth-brand-logo-wrap" alt="Logo Pemerintah Kota Bekasi" decoding="async">
         </a>
 
         <!-- Orb hiasan -->
@@ -48,7 +48,7 @@
             </p>
 
             <div class="nf-cta">
-                <a href="https://dbmsda.bekasikota.go.id/" class="nf-btn-solid">
+                <a href="https://bekasikota.bekasikota.go.id/" class="nf-btn-solid">
                     <i class="ti ti-login-2" aria-hidden="true"></i><span>Kembali ke Beranda</span>
                 </a>
             </div>
@@ -56,7 +56,7 @@
             <div class="nf-foot">
                 <small>
                         © {{ date('Y') }}
-                        <a href="#">DBMSDA Kota Bekasi.</a>
+                        <a href="#">Pemerintah Kota Bekasi.</a>
                         All Rights Reserved
                     </small>
 

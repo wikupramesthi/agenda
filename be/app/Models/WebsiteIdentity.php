@@ -66,8 +66,8 @@ class WebsiteIdentity extends Model
     public static function current(): self
     {
         return static::first() ?? static::create([
-            'site_name' => config('app.name', 'DBMSDA Kota Bekasi'),
-            'site_title' => 'DBMSDA Kota Bekasi',
+            'site_name' => config('app.name', 'Pemerintah Kota Bekasi'),
+            'site_title' => 'Pemerintah Kota Bekasi',
         ]);
     }
 }

@@ -123,8 +123,11 @@ class BannerController extends Controller
 
         $rules   = [
             'nama'       => 'required|string|max:255',
-            'deskripsi'  => 'nullable|string',
+            'deskripsi'  => 'nullable|string|max:2000',
             'status'     => 'required|in:active,inactive',
+            'link'       => 'nullable|url|max:500',
+            'album_ids'  => 'nullable|array',
+            'album_ids.*' => 'exists:albums,uuid',
         ];
         $messages = [
             'nama.required' => 'Nama media wajib diisi.',
@@ -132,8 +135,9 @@ class BannerController extends Controller
         ];
 
         if ($tipe === 'video') {
-            $rules['video_url'] = 'required|string|max:500';
+            $rules['video_url'] = ['required', 'url', 'max:500', 'regex:/^https?:\/\/(www\.youtube\.com|youtu\.be|m\.youtube\.com|www\.vimeo\.com|player\.vimeo\.com)\//i'];
             $messages['video_url.required'] = 'Link video wajib diisi.';
+            $messages['video_url.regex'] = 'Link video hanya mendukung YouTube atau Vimeo.';
         } else {
             $rules['gambar'] = 'required|image|mimes:jpg,jpeg,png,webp|max:5120';
             $rules['posisi'] = 'required|in:slider,pengumuman,infografis,galeri,popup,mitra,lainnya';
@@ -151,7 +155,7 @@ class BannerController extends Controller
                 'nama'      => $validated['nama'],
                 'deskripsi' => $validated['deskripsi'] ?? null,
                 'status'    => $validated['status'],
-                'link'      => $request->input('link'),
+                'link'      => $validated['link'] ?? null,
             ];
 
             if ($tipe === 'video') {
@@ -263,8 +267,11 @@ class BannerController extends Controller
 
         $rules   = [
             'nama'       => 'required|string|max:255',
-            'deskripsi'  => 'nullable|string',
+            'deskripsi'  => 'nullable|string|max:2000',
             'status'     => 'required|in:active,inactive',
+            'link'       => 'nullable|url|max:500',
+            'album_ids'  => 'nullable|array',
+            'album_ids.*' => 'exists:albums,uuid',
         ];
         $messages = [
             'nama.required' => 'Nama media wajib diisi.',
@@ -272,8 +279,9 @@ class BannerController extends Controller
         ];
 
         if ($tipe === 'video') {
-            $rules['video_url'] = 'required|string|max:500';
+            $rules['video_url'] = ['required', 'url', 'max:500', 'regex:/^https?:\/\/(www\.youtube\.com|youtu\.be|m\.youtube\.com|www\.vimeo\.com|player\.vimeo\.com)\//i'];
             $messages['video_url.required'] = 'Link video wajib diisi.';
+            $messages['video_url.regex'] = 'Link video hanya mendukung YouTube atau Vimeo.';
         } else {
             $rules['gambar'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120';
             $rules['posisi'] = 'required|in:slider,pengumuman,infografis,galeri,popup,mitra,lainnya';
@@ -288,7 +296,7 @@ class BannerController extends Controller
                 'nama'       => $validated['nama'],
                 'deskripsi'  => $validated['deskripsi'] ?? null,
                 'status'     => $validated['status'],
-                'link'       => $request->input('link'),
+                'link'       => $validated['link'] ?? null,
             ];
 
             if ($tipe === 'video') {
@@ -347,9 +355,10 @@ class BannerController extends Controller
     {
         $validated = $request->validate([
             'nama'      => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'deskripsi' => 'nullable|string|max:2000',
             'status'    => 'required|in:active,inactive',
-            'foto_ids'  => 'required|array|min:1',
+            'foto_ids'  => 'required|array|min:1|max:100',
+            'foto_ids.*' => 'exists:banner,uuid',
         ], [
             'nama.required'     => 'Nama album wajib diisi.',
             'foto_ids.required' => 'Pilih minimal satu foto untuk album.',
@@ -387,9 +396,10 @@ class BannerController extends Controller
 
         $validated = $request->validate([
             'nama'      => 'required|string|max:255',
-            'deskripsi' => 'nullable|string',
+            'deskripsi' => 'nullable|string|max:2000',
             'status'    => 'required|in:active,inactive',
-            'foto_ids'  => 'required|array|min:1',
+            'foto_ids'  => 'required|array|min:1|max:100',
+            'foto_ids.*' => 'exists:banner,uuid',
         ], [
             'nama.required'     => 'Nama album wajib diisi.',
             'foto_ids.required' => 'Pilih minimal satu foto untuk album.',

@@ -40,13 +40,28 @@ class DashboardController extends Controller
             return $this->memberDashboard();
         }
 
-        // Parse date range
-        $startDate = $request->filled('start_date')
-            ? Carbon::parse($request->start_date)->startOfDay()
-            : now()->subDays(30)->startOfDay();
-        $endDate = $request->filled('end_date')
-            ? Carbon::parse($request->end_date)->endOfDay()
-            : now()->endOfDay();
+        // Parse date range (tahan input tanggal rusak + rentang terbalik)
+        try {
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)->startOfDay()
+                : now()->subDays(30)->startOfDay();
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)->endOfDay()
+                : now()->endOfDay();
+        } catch (\Throwable) {
+            $startDate = now()->subDays(30)->startOfDay();
+            $endDate = now()->endOfDay();
+        }
+
+        // Tukar kalau rentang terbalik agar filter tetap jalan
+        if ($startDate->greaterThan($endDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+        }
+
+        // Batasi maksimal 366 hari agar query tetap ringan
+        if ($startDate->diffInDays($endDate) > 365) {
+            $startDate = $endDate->copy()->subDays(365)->startOfDay();
+        }
 
         $dateRangeLabel = $startDate->format('d M Y') . ' - ' . $endDate->format('d M Y');
         $daysDiff = (int) $startDate->diffInDays($endDate) + 1;
@@ -127,21 +142,22 @@ class DashboardController extends Controller
             ->limit(5)
             ->pluck('total', 'city');
 
-        // OPD tidak isi agenda dalam 7 hari terakhir
+        // OPD tidak isi agenda dalam 7 hari terakhir (1 query via withMax, tanpa N+1)
         $opdTidakAktif = User::role('opd')
             ->whereDoesntHave('agendas', fn ($q) => $q->where('created_at', '>=', now()->subDays(7)))
+            ->withMax('agendas as last_agenda_at', 'created_at')
             ->orderBy('name')
             ->get(['uuid', 'name', 'avatar'])
-            ->map(function ($user) {
-                $lastAgenda = $user->agendas()->latest('created_at')->first(['created_at']);
-                return [
-                    'name' => $user->name,
-                    'avatar' => $user->avatar,
-                    'last_agenda' => $lastAgenda ? $lastAgenda->created_at : null,
-                ];
-            });
+            ->map(fn ($user) => [
+                'name' => $user->name,
+                'avatar' => $user->avatar,
+                'last_agenda' => $user->last_agenda_at ? Carbon::parse($user->last_agenda_at) : null,
+            ]);
+        $isAdminViewer = $request->user()->hasAnyRole(['super-admin', 'admin']);
+
         $pendingAgendas = Agenda::with('user')
             ->where('status', 'pending')
+            ->when(! $isAdminViewer, fn ($q) => $q->where('user_uuid', $request->user()->uuid))
             ->latest('created_at')
             ->limit(5)
             ->get(['uuid', 'title', 'user_uuid', 'created_at']);
@@ -156,7 +172,7 @@ class DashboardController extends Controller
         $prevEnd = $startDate->copy()->subSecond();
 
         $visitorGrowth = $this->growth($visitorStats['total_visits'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->count());
-        $uniqueGrowth = $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct('ip_address')->count());
+        $uniqueGrowth = $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct()->count('ip_address'));
         $agendaGrowth = $this->growth($totalAgendas, Agenda::whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $publishedGrowth = $this->growth($publishedAgendas, Agenda::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->count());
         $messageGrowth = $this->growth($totalMessages, Kontak::whereBetween('created_at', [$prevStart, $prevEnd])->count());
@@ -166,8 +182,8 @@ class DashboardController extends Controller
         $schedulerOk = $this->health->isSchedulerOk($schedulerTerakhir);
         $storageOk = $this->health->isStorageOk();
 
-        // Recent activities for date range
-        $recentActivities = $this->getRecentActivities($startDate, $endDate);
+        // Recent activities for date range (non-admin: hanya milik sendiri)
+        $recentActivities = $this->getRecentActivities($startDate, $endDate, 5, $isAdminViewer ? null : $request->user()->uuid);
 
         return view('pages.dashboard.index', compact(
             'visitorStats',
@@ -246,12 +262,13 @@ class DashboardController extends Controller
         ));
     }
 
-    protected function getRecentActivities(Carbon $startDate, Carbon $endDate, int $limit = 5): array
+    protected function getRecentActivities(Carbon $startDate, Carbon $endDate, int $limit = 5, ?string $onlyUserUuid = null): array
     {
         $activities = [];
 
         // Recent agendas
         $recentAgendas = Agenda::whereBetween('created_at', [$startDate, $endDate])
+            ->when($onlyUserUuid, fn ($q) => $q->where('user_uuid', $onlyUserUuid))
             ->latest('created_at')
             ->limit(5)
             ->get(['uuid', 'slug', 'title', 'status', 'created_at']);
@@ -265,15 +282,17 @@ class DashboardController extends Controller
                 'description' => $agenda->title,
                 'time' => $agenda->created_at,
                 'date' => $agenda->created_at->translatedFormat('d M Y'),
-                'url' => route('agendas.show', $agenda->slug),
+                'url' => route('agendas.index', ['search' => $agenda->title]),
             ];
         }
 
-        // Recent messages
-        $recentMessages = Kontak::whereBetween('created_at', [$startDate, $endDate])
-            ->latest('created_at')
-            ->limit(3)
-            ->get(['uuid', 'nama', 'isi', 'created_at']);
+        // Recent messages (inbox kontak hanya untuk admin; OPD tidak punya akses)
+        $recentMessages = $onlyUserUuid
+            ? collect()
+            : Kontak::whereBetween('created_at', [$startDate, $endDate])
+                ->latest('created_at')
+                ->limit(3)
+                ->get(['uuid', 'nama', 'isi', 'created_at']);
 
         foreach ($recentMessages as $message) {
             $activities[] = [
@@ -284,7 +303,7 @@ class DashboardController extends Controller
                 'description' => Str::limit($message->isi, 50),
                 'time' => $message->created_at,
                 'date' => $message->created_at->translatedFormat('d M Y'),
-                'url' => route('layanan.kontak'),
+                'url' => route('layanan.kontak', ['search' => $message->nama]),
             ];
         }
 
@@ -296,12 +315,21 @@ class DashboardController extends Controller
 
     public function deviceStats(Request $request)
     {
-        $startDate = $request->filled('start_date')
-            ? Carbon::parse($request->start_date)->startOfDay()
-            : now()->subDays(30)->startOfDay();
-        $endDate = $request->filled('end_date')
-            ? Carbon::parse($request->end_date)->endOfDay()
-            : now()->endOfDay();
+        try {
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->start_date)->startOfDay()
+                : now()->subDays(30)->startOfDay();
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->end_date)->endOfDay()
+                : now()->endOfDay();
+        } catch (\Throwable) {
+            $startDate = now()->subDays(30)->startOfDay();
+            $endDate = now()->endOfDay();
+        }
+
+        if ($startDate->greaterThan($endDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+        }
 
         $deviceStats = VisitorLog::getDeviceStatsForRange($startDate, $endDate);
 

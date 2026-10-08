@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="60">
-    <title>Wallboard Pengaduan — DBMSDA Kota Bekasi</title>
+    <title>Wallboard Pengaduan — Pemerintah Kota Bekasi</title>
     <link rel="shortcut icon" href="{{ asset('img/fav.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -79,10 +79,10 @@
 
 <header class="wb-header py-3 mb-4">
     <div class="container-fluid px-4 d-flex align-items-center gap-3 flex-wrap">
-        <img src="{{ asset('img/logo-white.png') }}" alt="DBMSDA" height="52">
+        <img src="{{ asset('img/logo-white.png') }}" alt="Pemerintah Kota Bekasi" height="52">
         <div>
             <h2 class="fw-bold mb-0">PUSAT PANTAU PENGADUAN</h2>
-            <div class="opacity-75">Dinas Bina Marga dan Sumber Daya Air Kota Bekasi</div>
+            <div class="opacity-75">Pemerintah Kota Bekasi</div>
         </div>
         <div class="ms-auto text-end">
             <div id="wb-clock" class="fw-bold" style="font-size: 2rem; line-height: 1;">--:--:--</div>

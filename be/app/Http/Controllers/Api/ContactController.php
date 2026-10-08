@@ -41,7 +41,7 @@ class ContactController extends Controller
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'no_telp' => 'required|string|max:20',
-            'isi' => 'required|string',
+            'isi' => 'required|string|max:5000',
             'captcha_id' => 'required|string',
             'captcha_answer' => 'required|integer',
         ]);
@@ -76,12 +76,12 @@ class ContactController extends Controller
         // CAPTCHA benar → hapus supaya tidak bisa dipakai ulang
         Cache::forget($cacheKey);
 
-        // Simpan ke database
+        // Simpan ke database (plain text, tanpa HTML)
         $contact = Kontak::create([
             'nama' => $request->nama,
             'email' => $request->email,
             'no_telp' => $request->no_telp,
-            'isi' => $request->isi,
+            'isi' => strip_tags($request->isi),
         ]);
 
         // Beri tahu petugas backend

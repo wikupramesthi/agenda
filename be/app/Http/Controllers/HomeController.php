@@ -15,7 +15,7 @@ class HomeController extends Controller
           if (auth()->check()) {
           return redirect('/backend/dashboard');
      }
-        return redirect()->away('https://dbmsda.bekasikota.go.id/');
+        return redirect()->away('https://bekasikota.bekasikota.go.id/');
     }
 
 }

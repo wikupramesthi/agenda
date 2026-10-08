@@ -41,11 +41,11 @@
                         <label for="kategori" class="mb-2">Kategori</label>
                         <select name="kategori" id="kategori" class="form-control @error('kategori') is-invalid @enderror">
                             <option value="">-- Tanpa Kategori --</option>
-                            <option value="informasi-umum" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'informasi-umum' ? 'selected' : '' }}>Informasi Umum</option>
-                            <option value="layanan" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'layanan' ? 'selected' : '' }}>Layanan</option>
-                            <option value="infrastruktur-pemeliharaan" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'infrastruktur-pemeliharaan' ? 'selected' : '' }}>Infrastruktur & Pemeliharaan</option>
-                            <option value="pengaduan-permohonan" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'pengaduan-permohonan' ? 'selected' : '' }}>Pengaduan & Permohonan</option>
-                            <option value="program-kegiatan" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'program-kegiatan' ? 'selected' : '' }}>Program & Kegiatan</option>
+                            <option value="tentang-agenda" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'tentang-agenda' ? 'selected' : '' }}>Tentang Agenda</option>
+                            <option value="jadwal" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'jadwal' ? 'selected' : '' }}>Jadwal</option>
+                            <option value="lokasi" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'lokasi' ? 'selected' : '' }}>Lokasi</option>
+                            <option value="publikasi" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'publikasi' ? 'selected' : '' }}>Publikasi</option>
+                            <option value="lainnya" {{ ($item->kategori instanceof \BackedEnum ? $item->kategori->value : $item->kategori) === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         @error('kategori')
                             <div class="invalid-feedback">

@@ -272,7 +272,7 @@
 <div class="footer">
     <table style="width:100%; border-collapse:collapse;">
         <tr>
-            <td>Laporan Pengaduan Masyarakat — DBMSDA Kota Bekasi</td>
+            <td>Laporan Pengaduan Masyarakat — Pemerintah Kota Bekasi</td>
             <td style="text-align:right;">Halaman <span class="pagenum"></span></td>
         </tr>
     </table>
@@ -475,7 +475,7 @@
         <td>
             <div class="ttd-box">
                 Bekasi, {{ now()->translatedFormat('d F Y') }}<br>
-                Kepala Dinas Bina Marga dan<br>Sumber Daya Air Kota Bekasi<br><br><br><br><br>
+                Kepala Pemerintah Kota Bekasi<br><br><br><br><br>
                 <strong><u>( ........................................ )</u></strong><br>
                 NIP. ........................................
             </div>

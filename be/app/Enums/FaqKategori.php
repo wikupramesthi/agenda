@@ -4,20 +4,20 @@ namespace App\Enums;
 
 enum FaqKategori: string
 {
-    case INFORMASI_UMUM = 'informasi-umum';
-    case LAYANAN = 'layanan';
-    case INFRASTRUKTUR_PEMELIHARAAN = 'infrastruktur-pemeliharaan';
-    case PENGADUAN_PERMOHONAN = 'pengaduan-permohonan';
-    case PROGRAM_KEGIATAN = 'program-kegiatan';
+    case TENTANG_AGENDA = 'tentang-agenda';
+    case JADWAL = 'jadwal';
+    case LOKASI = 'lokasi';
+    case PUBLIKASI = 'publikasi';
+    case LAINNYA = 'lainnya';
 
     public function label(): string
     {
         return match ($this) {
-            self::INFORMASI_UMUM => 'Informasi Umum',
-            self::LAYANAN => 'Layanan',
-            self::INFRASTRUKTUR_PEMELIHARAAN => 'Infrastruktur & Pemeliharaan',
-            self::PENGADUAN_PERMOHONAN => 'Pengaduan & Permohonan',
-            self::PROGRAM_KEGIATAN => 'Program & Kegiatan',
+            self::TENTANG_AGENDA => 'Tentang Agenda',
+            self::JADWAL => 'Jadwal',
+            self::LOKASI => 'Lokasi',
+            self::PUBLIKASI => 'Publikasi',
+            self::LAINNYA => 'Lainnya',
         };
     }
 

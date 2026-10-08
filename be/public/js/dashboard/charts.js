@@ -77,7 +77,14 @@ function switchVisitorChart(type, btn) {
 // ============ DEVICE CHART ============
 async function createDeviceChart() {
     try {
-        const response = await fetch(window.dashboardData.routes?.deviceStats || '/backend/dashboard/device-stats');
+        const base = window.dashboardData.routes?.deviceStats || '/backend/dashboard/device-stats';
+        const params = new URLSearchParams();
+        const startInput = document.querySelector('input[name="start_date"]');
+        const endInput = document.querySelector('input[name="end_date"]');
+        if (startInput && startInput.value) params.set('start_date', startInput.value);
+        if (endInput && endInput.value) params.set('end_date', endInput.value);
+        const url = params.toString() ? base + '?' + params.toString() : base;
+        const response = await fetch(url);
         const data = await response.json();
 
         deviceChart = destroyChart(deviceChart);
