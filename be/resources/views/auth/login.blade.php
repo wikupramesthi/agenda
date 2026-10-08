@@ -17,7 +17,7 @@
     .login-lang-switch-wrap--brand {
         position: absolute;
         top: 18px;
-        left: 24px;
+        right: 24px;
         z-index: 10;
     }
 
