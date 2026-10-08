@@ -87,6 +87,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($users->hasPages())
+                <div class="card-footer bg-transparent d-flex justify-content-center">
+                    {{ $users->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </section>

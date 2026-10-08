@@ -33,7 +33,7 @@ class ServiceManager
                 'category' => $data['category'],
                 'url' => $data['url'] ?? null,
                 'image' => $path,
-                'description' => $data['description'] ?? null,
+                'description' => HtmlSanitizer::clean($data['description'] ?? null),
                 'is_active' => (bool) ($data['is_active'] ?? false),
             ]);
 
@@ -67,7 +67,7 @@ class ServiceManager
                 'name' => $data['name'],
                 'category' => $data['category'],
                 'url' => $data['url'] ?? null,
-                'description' => $data['description'] ?? null,
+                'description' => HtmlSanitizer::clean($data['description'] ?? null),
                 'is_active' => (bool) ($data['is_active'] ?? false),
             ])->save();
 

@@ -41,9 +41,9 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:categories,name',
-            'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:categories,name',
+            'description' => 'nullable|string|max:2000',
+            'icon' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-\s]+$/i'],
         ]);
 
         return $this->transactional(function () use ($request) {
@@ -80,9 +80,9 @@ class CategoryController extends Controller
     public function update(Request $request, $uuid)
     {
         $request->validate([
-            'name' => 'required|unique:categories,name,' . $uuid . ',uuid',
-            'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:categories,name,' . $uuid . ',uuid',
+            'description' => 'nullable|string|max:2000',
+            'icon' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-\s]+$/i'],
         ]);
 
         return $this->transactional(function () use ($uuid, $request) {

@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class PasswordController extends Controller
@@ -22,7 +25,7 @@ class PasswordController extends Controller
 
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'password' => ['required', Password::min(12)->letters()->mixedCase()->numbers(), 'confirmed'],
         ], [
             'current_password.required' => 'The current password is required.',
             'current_password.current_password' => 'The current password is incorrect.',
@@ -31,9 +34,15 @@ class PasswordController extends Controller
             'password.min' => 'The password must be at least :min characters long.',
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        $user->forceFill([
             'password' => Hash::make($validated['password']),
-        ]);
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        // Cabut semua sesi & cookie ingat-di-perangkat lain.
+        Auth::logoutOtherDevices($validated['current_password']);
+        DB::table('sessions')->where('user_id', $user->getAuthIdentifier())->where('id', '!=', session()->getId())->delete();
 
         return back()->with('success', 'Password has been successfully updated!');
     }

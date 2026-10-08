@@ -34,7 +34,7 @@ class PenggunaController extends Controller
             'unverified' => (clone $baseQuery)->whereNull('email_verified_at')->count(),
         ];
 
-        $users = $baseQuery->latest()->get();
+        $users = $baseQuery->latest()->paginate(20)->withQueryString();
 
         return view(
             'pages.dashboard.pengguna',

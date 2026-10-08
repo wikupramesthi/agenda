@@ -36,6 +36,9 @@ return [
 
     'inactive_timeout' => env('SESSION_INACTIVE_TIMEOUT', 30),
 
+    // Batas umur absolut sesi (menit) walau keep-alive diklik terus.
+    'absolute_lifetime' => env('SESSION_ABSOLUTE_LIFETIME', 720),
+
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
@@ -171,7 +174,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', str_starts_with((string) env('APP_URL', ''), 'https')),
 
     /*
     |--------------------------------------------------------------------------

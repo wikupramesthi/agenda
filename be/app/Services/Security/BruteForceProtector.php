@@ -59,14 +59,23 @@ class BruteForceProtector
 
     /**
      * Register a failed attempt and lock the IP/email when the threshold is hit.
+     *
+     * Anti-DoS: kunci level email hanya untuk email yang benar-benar
+     * terdaftar dan dengan ambang 3x lipat, agar penyerang tidak bisa
+     * mengunci akun korban untuk semua orang dengan spam password salah.
      */
     public function recordFailure(?string $ip, ?string $email): ?LoginLockout
     {
         $lockout = null;
         $threshold = $this->maxAttempts();
+        $normalizedEmail = $this->normalizeEmail($email);
 
-        foreach ([['ip', $ip], ['email', $this->normalizeEmail($email)]] as [$type, $value]) {
+        foreach ([['ip', $ip, $threshold], ['email', $normalizedEmail, $threshold * 3]] as [$type, $value, $limit]) {
             if (blank($value)) {
+                continue;
+            }
+
+            if ($type === 'email' && ! \App\Models\User::where('email', $value)->exists()) {
                 continue;
             }
 
@@ -85,7 +94,7 @@ class BruteForceProtector
             $row->attempts = (int) $row->attempts + 1;
             $row->last_attempt_at = now();
 
-            if ($row->attempts >= $threshold) {
+            if ($row->attempts >= $limit) {
                 $row->blocked_until = now()->addMinutes($this->lockoutMinutes());
                 $row->reason = 'Terdeteksi percobaan login gagal berulang';
                 $lockout = $row;

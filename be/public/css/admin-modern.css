@@ -21,6 +21,12 @@
     --modern-radius-sm: 0.9rem;
 }
 
+/* Kunci gutter scrollbar agar halaman tidak bergeser saat
+   scrollbar muncul/hilang (mis. saat toggle dark mode). */
+html {
+    scrollbar-gutter: stable;
+}
+
 [data-bs-theme="dark"] {
     --modern-bg: #0b0f1a;
     --modern-surface: #131826;
@@ -2791,7 +2797,8 @@ html[data-bs-theme="dark"]
 
 html[data-bs-theme="dark"] .sidebar-wrapper .sidenav-footer .card {
     background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* border-color saja (tanpa width) agar tidak reflow/geser saat ganti tema */
+    border-color: transparent !important;
 }
 
 html[data-bs-theme="dark"] .sidebar-wrapper .sidenav-footer .docs-info h6 {

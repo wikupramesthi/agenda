@@ -15,6 +15,7 @@ function toggleDarkTheme() {
  * @param {boolean} persist 
  */
 function setTheme(theme, persist = false) {
+  document.body.classList.remove('dark', 'light')
   document.body.classList.add(theme)
   document.documentElement.setAttribute('data-bs-theme', theme)
   

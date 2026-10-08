@@ -33,6 +33,7 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
         $request->session()->put('last_activity', time());
+        $request->session()->put('login_at', time());
 
         // Default: URL absolut dashboard (sudah single /be/ berkat
         // forceRootUrl dinamis di AppServiceProvider).

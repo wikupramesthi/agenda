@@ -50,7 +50,7 @@ class ServiceController extends Controller
             'category'    => ['required', 'in:external,internal,other'],
             'url'         => ['nullable', 'url', 'max:255'],
             'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'is_active'   => ['sometimes', 'boolean'],
         ]);
 
@@ -78,7 +78,7 @@ class ServiceController extends Controller
             'category'    => ['required', 'in:external,internal,other'],
             'url'         => ['nullable', 'url', 'max:255'],
             'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'is_active'   => ['sometimes', 'boolean'],
         ]);
 

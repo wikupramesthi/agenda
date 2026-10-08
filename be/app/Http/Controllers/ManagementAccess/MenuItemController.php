@@ -89,6 +89,7 @@ class MenuItemController extends Controller
     {
         // dd($menu->id, $menuItem, $id);
         $menuItemId = $menuItem->findOrFail($id);
+        abort_if($menuItemId->menu_group_id !== $menu->id, 404);
         $validated = $request->validated();
         $menuItemId->update(array_merge(
             $validated,
@@ -106,6 +107,7 @@ class MenuItemController extends Controller
      */
     public function destroy(MenuGroup $menu, MenuItem $item)
     {
+        abort_if($item->menu_group_id !== $menu->id, 404);
         $item->delete();
 
         return back()->with('success', 'Menu Item has been deleted successfully!');

@@ -68,6 +68,7 @@ class GoogleController extends Controller
             Auth::login($user);
             $request->session()->regenerate();
             session()->put('last_activity', time());
+            session()->put('login_at', time());
 
             return redirect()->route('dashboard.index');
         } catch (\Exception $e) {

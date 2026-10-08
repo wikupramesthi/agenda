@@ -17,24 +17,23 @@ class AutoLogoutInactive
     {
         if (Auth::check()) {
             $timeoutMinutes = (int) config('session.inactive_timeout', 60);
+            $absoluteMinutes = (int) config('session.absolute_lifetime', 720);
             $lastActivity = $request->session()->get('last_activity');
+
+            // Batas umur absolut: keep-alive tidak bisa memperpanjang selamanya.
+            // Sesi lama tanpa penanda (dibuat sebelum fitur ini) diberi penanda
+            // sekarang agar tidak langsung ter-logout.
+            $loginAt = $request->session()->get('login_at');
+            if ($loginAt === null) {
+                $request->session()->put('login_at', time());
+            } elseif (time() - (int) $loginAt > $absoluteMinutes * 60) {
+                return $this->forceLogout($request, 'Sesi telah mencapai batas waktu maksimal. Silakan login kembali.');
+            }
 
             if ($lastActivity !== null) {
                 $inactiveSeconds = time() - $lastActivity;
                 if ($inactiveSeconds > $timeoutMinutes * 60) {
-                    Auth::guard('web')->logout();
-                    $request->session()->invalidate();
-                    $request->session()->regenerateToken();
-
-                    if ($request->expectsJson() || $request->is('api/*')) {
-                        return response()->json([
-                            'message' => 'Sesi berakhir karena tidak ada aktivitas selama ' . $timeoutMinutes . ' menit. Silakan login kembali.',
-                        ], 401);
-                    }
-
-                    return redirect()
-                        ->route('login')
-                        ->withErrors(['session_expired' => 'Sesi berakhir karena tidak ada aktivitas selama ' . $timeoutMinutes . ' menit. Silakan login kembali.']);
+                    return $this->forceLogout($request, 'Sesi berakhir karena tidak ada aktivitas selama ' . $timeoutMinutes . ' menit. Silakan login kembali.');
                 }
             }
 
@@ -43,5 +42,20 @@ class AutoLogoutInactive
         }
 
         return $next($request);
+    }
+
+    private function forceLogout(Request $request, string $message): Response
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json(['message' => $message], 401);
+        }
+
+        return redirect()
+            ->route('login')
+            ->withErrors(['session_expired' => $message]);
     }
 }

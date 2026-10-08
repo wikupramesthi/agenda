@@ -400,6 +400,11 @@ class AduanController extends Controller
             $request->kecuali_uuid
         );
 
+        // Non-petugas hanya boleh melihat kandidat miliknya sendiri.
+        if (! $request->user()->hasAnyRole(['super-admin', 'admin', 'uptd'])) {
+            $mirip = $mirip->where('user_uuid', $request->user()->uuid)->values();
+        }
+
         return response()->json([
             'data' => $mirip->map(fn (Aduan $a) => [
                 'nomor_aduan' => $a->nomor_aduan,

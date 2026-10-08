@@ -21,6 +21,7 @@ class Document extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'user_uuid',
         'category_uuid',
         'title',
         'slug',
@@ -71,6 +72,11 @@ class Document extends Model
             'category_uuid',
             'uuid'
         );
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_uuid', 'uuid');
     }
 
     public function versions()

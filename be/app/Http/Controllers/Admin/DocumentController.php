@@ -19,9 +19,18 @@ class DocumentController extends Controller
      * Display a listing of the documents.
      */
 
+    private function isAdmin(?\App\Models\User $user = null): bool
+    {
+        $user ??= auth()->user();
+
+        return (bool) $user?->hasAnyRole(['super-admin', 'admin']);
+    }
+
     public function index(Request $request)
     {
-        $baseQuery = Document::query();
+        // OPD hanya melihat dokumen buatannya sendiri; admin melihat semua.
+        $baseQuery = Document::query()
+            ->when(! $this->isAdmin($request->user()), fn ($q) => $q->where('user_uuid', $request->user()->uuid));
 
         // Searching
         if ($request->filled('search')) {
@@ -105,6 +114,7 @@ class DocumentController extends Controller
             }
             \Illuminate\Support\Facades\DB::beginTransaction();
             Document::create([
+                'user_uuid' => $request->user()->uuid,
                 'category_uuid' => $request->category_uuid,
                 'title'        => $request->title,
                 'slug'         => $request->slug ? Str::slug($request->slug) : Str::slug($request->title),
@@ -130,6 +140,10 @@ class DocumentController extends Controller
      */
     public function edit(Document $document)
     {
+        if (! $this->isAdmin() && $document->user_uuid !== auth()->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $document->load(['versions.user', 'category']);
         $categories = DocumentCategory::where('status', 'active')
             ->orderBy('name')
@@ -146,6 +160,10 @@ class DocumentController extends Controller
      */
     public function update(Request $request, Document $document)
     {
+        if (! $this->isAdmin($request->user()) && $document->user_uuid !== $request->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $request->validate([
             'category_uuid' => 'required|exists:document_categories,uuid',
             'title'         => 'required|string|max:255',
@@ -205,6 +223,10 @@ class DocumentController extends Controller
      */
     public function destroy(Document $document)
     {
+        if (! $this->isAdmin() && $document->user_uuid !== auth()->user()->uuid) {
+            abort(403, 'Anda tidak memiliki akses ke dokumen ini.');
+        }
+
         $file = $document->file;
         $thumb = $document->thumbnail;
         try {
@@ -224,16 +246,19 @@ class DocumentController extends Controller
     {
         $ids = $request->input('ids', []);
         if (!is_array($ids) || empty($ids)) return back()->with('error', 'Tidak ada data dipilih.');
-        $docs = Document::whereIn('uuid', $ids)->get();
+        $docs = Document::whereIn('uuid', $ids)
+            ->when(! $this->isAdmin($request->user()), fn ($q) => $q->where('user_uuid', $request->user()->uuid))
+            ->get();
+        if ($docs->isEmpty()) return back()->with('error', 'Data yang dipilih tidak ditemukan.');
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
-            Document::whereIn('uuid', $ids)->delete();
+            Document::whereIn('uuid', $docs->pluck('uuid')->all())->delete();
             \Illuminate\Support\Facades\DB::commit();
             foreach ($docs as $d) {
                 if ($d->file && Storage::disk('public')->exists($d->file)) Storage::disk('public')->delete($d->file);
                 if ($d->thumbnail && Storage::disk('public')->exists($d->thumbnail)) Storage::disk('public')->delete($d->thumbnail);
             }
-            return back()->with('success', count($ids) . ' dokumen berhasil dihapus.');
+            return back()->with('success', $docs->count() . ' dokumen berhasil dihapus.');
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\DB::rollBack();
             return back()->with('error', $e->getMessage());

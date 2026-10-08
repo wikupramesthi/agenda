@@ -26,6 +26,12 @@ class RouteMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Tamu (belum login) diteruskan ke middleware auth agar
+        // diarahkan ke halaman login, bukan 500 null->can().
+        if (! $request->user()) {
+            return $next($request);
+        }
+
         $routes = Route::firstWhere(
             'route',
             $request->route()?->getName()

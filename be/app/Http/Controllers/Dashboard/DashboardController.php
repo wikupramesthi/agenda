@@ -70,12 +70,19 @@ class DashboardController extends Controller
         $cacheKeyBase = 'dashboard_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd');
         $visitorStats = Cache::remember($cacheKeyBase . '_visitor', 300, fn () => VisitorLog::getStatsForRange($startDate, $endDate));
 
+        // OPD hanya melihat angka miliknya sendiri; admin melihat semua.
+        // (Cache dipisah per pemilik agar tidak bocor antar user.)
+        $isAdminViewer = $request->user()->hasAnyRole(['super-admin', 'admin']);
+        $ownerUuid = $isAdminViewer ? null : $request->user()->uuid;
+
         // Content statistics for date range - cache 1 menit per range
-        $cacheKeyStats = 'dashboard_stats_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd');
+        $cacheKeyStats = 'dashboard_stats_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd') . '_' . ($ownerUuid ?? 'all');
         $contentStats = Cache::remember($cacheKeyStats, 60, fn () => [
-            'totalAgendas' => Agenda::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'totalAgendas' => Agenda::whereBetween('created_at', [$startDate, $endDate])
+                ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count(),
             'publishedAgendas' => Agenda::where('status', 'published')
-                ->whereBetween('created_at', [$startDate, $endDate])->count(),
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count(),
             'totalMessages' => Kontak::whereBetween('created_at', [$startDate, $endDate])->count(),
             'unreadMessages' => Kontak::where('status', 'open')
                 ->whereBetween('created_at', [$startDate, $endDate])->count(),
@@ -98,10 +105,12 @@ class DashboardController extends Controller
             $agendaTrenLabels[] = $bulan->translatedFormat('M Y');
             $agendaTrenData[] = Agenda::whereYear('created_at', $bulan->year)
                 ->whereMonth('created_at', $bulan->month)
+                ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))
                 ->count();
             $agendaPendingData[] = Agenda::where('status', 'pending')
                 ->whereYear('created_at', $bulan->year)
                 ->whereMonth('created_at', $bulan->month)
+                ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))
                 ->count();
         }
 
@@ -114,6 +123,7 @@ class DashboardController extends Controller
 
         // Agenda paling banyak dilihat
         $topViewedAgendas = Agenda::where('status', 'published')
+            ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))
             ->orderByDesc('views')
             ->limit(5)
             ->get(['uuid', 'slug', 'title', 'views', 'created_at']);
@@ -142,8 +152,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->pluck('total', 'city');
 
-        // OPD tidak isi agenda dalam 7 hari terakhir (1 query via withMax, tanpa N+1)
-        $opdTidakAktif = User::role('opd')
+        // OPD tidak isi agenda dalam 7 hari terakhir (khusus admin; 1 query via withMax, tanpa N+1)
+        $opdTidakAktif = $isAdminViewer ? User::role('opd')
             ->whereDoesntHave('agendas', fn ($q) => $q->where('created_at', '>=', now()->subDays(7)))
             ->withMax('agendas as last_agenda_at', 'created_at')
             ->orderBy('name')
@@ -152,9 +162,7 @@ class DashboardController extends Controller
                 'name' => $user->name,
                 'avatar' => $user->avatar,
                 'last_agenda' => $user->last_agenda_at ? Carbon::parse($user->last_agenda_at) : null,
-            ]);
-        $isAdminViewer = $request->user()->hasAnyRole(['super-admin', 'admin']);
-
+            ]) : collect();
         $pendingAgendas = Agenda::with('user')
             ->where('status', 'pending')
             ->when(! $isAdminViewer, fn ($q) => $q->where('user_uuid', $request->user()->uuid))
@@ -173,8 +181,8 @@ class DashboardController extends Controller
 
         $visitorGrowth = $this->growth($visitorStats['total_visits'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->count());
         $uniqueGrowth = $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct()->count('ip_address'));
-        $agendaGrowth = $this->growth($totalAgendas, Agenda::whereBetween('created_at', [$prevStart, $prevEnd])->count());
-        $publishedGrowth = $this->growth($publishedAgendas, Agenda::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->count());
+        $agendaGrowth = $this->growth($totalAgendas, Agenda::whereBetween('created_at', [$prevStart, $prevEnd])->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count());
+        $publishedGrowth = $this->growth($publishedAgendas, Agenda::where('status', 'published')->whereBetween('created_at', [$prevStart, $prevEnd])->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count());
         $messageGrowth = $this->growth($totalMessages, Kontak::whereBetween('created_at', [$prevStart, $prevEnd])->count());
 
         // Ringkasan kesehatan sistem untuk widget dashboard (single source via SystemHealthService)
