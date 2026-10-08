@@ -118,11 +118,13 @@
 <div class="hl-box">
     <p>&bull; Total <strong>{{ number_format($visitorStats['total_visits']) }} kunjungan</strong> dari <strong>{{ number_format($visitorStats['unique_visitors']) }} pengunjung unik</strong>{{ $visitorGrowth >= 0 ? ', naik' : ', turun' }} <strong>{{ abs($visitorGrowth) }}%</strong> dibanding periode sebelumnya.</p>
     <p>&bull; Puncak kunjungan <strong>{{ number_format($dTotalsAll[$peakIdx] ?? 0) }}</strong> pada <strong>{{ $dLabelsAll[$peakIdx] ?? '-' }}</strong>.</p>
-    <p>&bull; <strong>{{ number_format($totalAgendas) }} agenda</strong> diterbitkan ({{ $publishedAgendas }} tayang, {{ $pendingAgendas }} menunggu persetujuan) dengan <strong>{{ number_format($totalMessages) }} pesan masuk</strong> ({{ $unreadMessages }} belum dibaca).</p>
+    <p>&bull; <strong>{{ number_format($totalAgendas) }} agenda</strong> diterbitkan ({{ $publishedAgendas }} tayang, {{ $pendingAgendas }} menunggu persetujuan)@if($isAdminViewer) dengan <strong>{{ number_format($totalMessages) }} pesan masuk</strong> ({{ $unreadMessages }} belum dibaca)@endif.</p>
+    @if($isAdminViewer)
     @if($opdTidakAktif->count() > 0)
     <p>&bull; Perhatian: <strong>{{ $opdTidakAktif->count() }} OPD</strong> tidak mengisi agenda dalam 7 hari terakhir.</p>
     @else
     <p>&bull; Seluruh OPD aktif mengisi agenda dalam 7 hari terakhir.</p>
+    @endif
     @endif
 </div>
 
@@ -145,11 +147,13 @@
             <div class="kpi-val">{{ number_format($totalAgendas) }}</div>
             <div class="kpi-sub">{{ $publishedAgendas }} tayang &bull; {{ $pendingAgendas }} pending</div>
         </td>
+        @if($isAdminViewer)
         <td>
             <div class="kpi-lbl">Pesan Masuk</div>
             <div class="kpi-val">{{ number_format($totalMessages) }}</div>
             <div class="kpi-sub">{{ $unreadMessages }} belum dibaca</div>
         </td>
+        @endif
     </tr>
 </table>
 
@@ -280,6 +284,7 @@
     </tbody>
 </table>
 
+@if($isAdminViewer)
 <div class="sec-sub">OPD 7 hari tidak aktif ({{ $opdTidakAktif->count() }})</div>
 <table class="grid">
     <thead><tr><th>Nama OPD</th><th style="width:150px;">Terakhir Mengisi</th></tr></thead>
@@ -291,6 +296,7 @@
     @endforelse
     </tbody>
 </table>
+@endif
 
 {{-- ================= TTD ================= --}}
 <table class="sig-table">

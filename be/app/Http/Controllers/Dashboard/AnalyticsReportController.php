@@ -73,6 +73,10 @@ class AnalyticsReportController extends Controller
         [$startDate, $endDate] = $this->parseRange($request);
         $daysDiff = (int) $startDate->diffInDays($endDate) + 1;
 
+        // OPD hanya melihat angka miliknya sendiri; inbox pesan & OPD nonaktif khusus admin.
+        $isAdminViewer = $request->user()->hasAnyRole(['super-admin', 'admin']);
+        $ownerUuid = $isAdminViewer ? null : $request->user()->uuid;
+
         $identity = WebsiteIdentity::current();
         $logoPath = ($identity->logo && file_exists(public_path('storage/' . $identity->logo)))
             ? public_path('storage/' . $identity->logo)
@@ -82,15 +86,20 @@ class AnalyticsReportController extends Controller
 
         $prevStart = $startDate->copy()->subDays($daysDiff);
         $prevEnd = $startDate->copy()->subSecond();
+        $visitorGrowth = $this->growth($visitorStats['total_visits'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->count());
+        $uniqueGrowth = $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct()->count('ip_address'));
 
-        $totalAgendas = Agenda::whereBetween('created_at', [$startDate, $endDate])->count();
+        $totalAgendas = Agenda::whereBetween('created_at', [$startDate, $endDate])
+            ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count();
         $publishedAgendas = Agenda::where('status', 'published')
-            ->whereBetween('created_at', [$startDate, $endDate])->count();
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count();
         $pendingAgendas = Agenda::where('status', 'pending')
-            ->whereBetween('created_at', [$startDate, $endDate])->count();
-        $totalMessages = Kontak::whereBetween('created_at', [$startDate, $endDate])->count();
-        $unreadMessages = Kontak::where('status', 'open')
-            ->whereBetween('created_at', [$startDate, $endDate])->count();
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))->count();
+        $totalMessages = $isAdminViewer ? Kontak::whereBetween('created_at', [$startDate, $endDate])->count() : 0;
+        $unreadMessages = $isAdminViewer ? Kontak::where('status', 'open')
+            ->whereBetween('created_at', [$startDate, $endDate])->count() : 0;
 
         $agendaTrenLabels = [];
         $agendaTrenData = [];
@@ -99,6 +108,7 @@ class AnalyticsReportController extends Controller
             $agendaTrenLabels[] = $bulan->translatedFormat('M Y');
             $agendaTrenData[] = Agenda::whereYear('created_at', $bulan->year)
                 ->whereMonth('created_at', $bulan->month)
+                ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))
                 ->count();
         }
         $trenMax = max(1, max($agendaTrenData));
@@ -111,11 +121,12 @@ class AnalyticsReportController extends Controller
         $topOpdMax = max(1, (int) $topOpd->max('total_agenda'));
 
         $topViewedAgendas = Agenda::where('status', 'published')
+            ->when($ownerUuid, fn ($q) => $q->where('user_uuid', $ownerUuid))
             ->orderByDesc('views')
             ->limit(5)
             ->get(['uuid', 'slug', 'title', 'views', 'created_at']);
 
-        $agendaKategori = Category::withCount('agendas')->orderByDesc('agendas_count')->limit(8)->get();
+        $agendaKategori = Category::withCount(['agendas' => fn ($q) => $ownerUuid ? $q->where('user_uuid', $ownerUuid) : $q])->orderByDesc('agendas_count')->limit(8)->get();
 
         $browserStats = VisitorLog::whereBetween('visited_at', [$startDate, $endDate])
             ->selectRaw('browser, count(*) as total')
@@ -135,7 +146,7 @@ class AnalyticsReportController extends Controller
         $deviceStats = VisitorDailyStat::getDeviceBreakdownForRange($startDate, $endDate);
         $deviceTotal = max(1, array_sum($deviceStats['values']));
 
-        $opdTidakAktif = User::role('opd')
+        $opdTidakAktif = $isAdminViewer ? User::role('opd')
             ->whereDoesntHave('agendas', fn ($q) => $q->where('created_at', '>=', now()->subDays(7)))
             ->withMax('agendas as last_agenda_at', 'created_at')
             ->orderBy('name')
@@ -143,9 +154,10 @@ class AnalyticsReportController extends Controller
             ->map(fn ($user) => [
                 'name' => $user->name,
                 'last_agenda' => $user->last_agenda_at ? Carbon::parse($user->last_agenda_at) : null,
-            ]);
+            ]) : collect();
 
         return [
+            'isAdminViewer' => $isAdminViewer,
             'identity' => $identity,
             'logoPath' => $logoPath,
             'startDate' => $startDate,
@@ -155,6 +167,8 @@ class AnalyticsReportController extends Controller
             'generatedAt' => now(),
             'generatedBy' => $request->user()->name ?? '-',
             'visitorStats' => $visitorStats,
+            'visitorGrowth' => $visitorGrowth,
+            'uniqueGrowth' => $uniqueGrowth,
             'visitorGrowth' => $this->growth($visitorStats['total_visits'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->count()),
             'uniqueGrowth' => $this->growth($visitorStats['unique_visitors'], VisitorLog::whereBetween('visited_at', [$prevStart, $prevEnd])->distinct()->count('ip_address')),
             'totalAgendas' => $totalAgendas,

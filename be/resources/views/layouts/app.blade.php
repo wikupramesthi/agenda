@@ -45,8 +45,8 @@
 <body>
     <div class="min-height-300 position-absolute w-100" style="background: linear-gradient(90deg, #0a4d8e 0%, #139a8d 100%); top: 0; left: 0;"></div>
     <div class="app-loader" id="app-loader">
-        <img src="{{ asset('img/logo.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--light">
-        <img src="{{ asset('img/logo-white.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--dark">
+        <img src="{{ asset('img/fav.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--light">
+        <img src="{{ asset('img/fav.png') }}" alt="Pemerintah Kota Bekasi" class="app-loader__logo app-loader__logo--dark">
         <div class="app-loader__spinner" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>

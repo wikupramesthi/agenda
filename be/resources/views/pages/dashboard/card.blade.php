@@ -443,7 +443,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3">
+        <div class="@hasanyrole('super-admin|admin') col-lg-3 @else col-lg-6 @endhasanyrole">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-transparent py-2 px-3 border-bottom">
                     <h5 class="card-title mb-0 small fw-semibold"><i class="bi bi-eye me-1"></i>Paling Banyak Dilihat</h5>
@@ -464,6 +464,7 @@
             </div>
         </div>
 
+        @hasanyrole('super-admin|admin')
         <div class="col-lg-3">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-transparent py-2 px-3 border-bottom">
@@ -486,6 +487,7 @@
                 </div>
             </div>
         </div>
+        @endhasanyrole
     </div>
 
 </div>

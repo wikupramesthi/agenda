@@ -66,27 +66,28 @@
             {{-- Ringkasan eksekutif --}}
             <h6 class="report-sec-title mb-3">I. RINGKASAN EKSEKUTIF</h6>
             <div class="row g-3 mb-4">
-                <div class="col-6 col-lg-3">
+                <div class="col-6 @if($isAdminViewer) col-lg-3 @else col-lg-4 @endif">
                     <div class="report-kpi p-3 text-center h-100">
                         <div class="small text-muted">Total Kunjungan</div>
                         <div class="fw-bold fs-4">{{ number_format($visitorStats['total_visits']) }}</div>
                         <span class="badge {{ $visitorGrowth >= 0 ? 'bg-success' : 'bg-danger' }}">{{ $visitorGrowth >= 0 ? '+' : '' }}{{ $visitorGrowth }}%</span>
                     </div>
                 </div>
-                <div class="col-6 col-lg-3">
+                <div class="col-6 @if($isAdminViewer) col-lg-3 @else col-lg-4 @endif">
                     <div class="report-kpi p-3 text-center h-100">
                         <div class="small text-muted">Pengunjung Unik</div>
                         <div class="fw-bold fs-4">{{ number_format($visitorStats['unique_visitors']) }}</div>
                         <span class="badge {{ $uniqueGrowth >= 0 ? 'bg-success' : 'bg-danger' }}">{{ $uniqueGrowth >= 0 ? '+' : '' }}{{ $uniqueGrowth }}%</span>
                     </div>
                 </div>
-                <div class="col-6 col-lg-3">
+                <div class="col-6 @if($isAdminViewer) col-lg-3 @else col-lg-4 @endif">
                     <div class="report-kpi p-3 text-center h-100">
                         <div class="small text-muted">Total Agenda</div>
                         <div class="fw-bold fs-4">{{ number_format($totalAgendas) }}</div>
                         <span class="badge bg-info text-dark">{{ $publishedAgendas }} tayang • {{ $pendingAgendas }} pending</span>
                     </div>
                 </div>
+                @if($isAdminViewer)
                 <div class="col-6 col-lg-3">
                     <div class="report-kpi p-3 text-center h-100">
                         <div class="small text-muted">Pesan Masuk</div>
@@ -94,6 +95,7 @@
                         <span class="badge bg-warning text-dark">{{ $unreadMessages }} belum dibaca</span>
                     </div>
                 </div>
+                @endif
             </div>
 
             {{-- Tren kunjungan --}}
@@ -194,7 +196,7 @@
             {{-- Kategori + kota + perhatian --}}
             <h6 class="report-sec-title mb-3">V. KATEGORI, WILAYAH & PERLU PERHATIAN</h6>
             <div class="row g-3 mb-4">
-                <div class="col-lg-4">
+                <div class="@if($isAdminViewer) col-lg-4 @else col-lg-6 @endif">
                     <div class="small fw-semibold mb-2">Agenda per kategori</div>
                     <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
                         <tbody>
@@ -206,7 +208,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="col-lg-4">
+                <div class="@if($isAdminViewer) col-lg-4 @else col-lg-6 @endif">
                     <div class="small fw-semibold mb-2">Kota asal pengunjung</div>
                     <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
                         <tbody>
@@ -228,6 +230,7 @@
                         </tbody>
                     </table>
                 </div>
+                @if($isAdminViewer)
                 <div class="col-lg-4">
                     <div class="small fw-semibold mb-2">OPD 7 hari tidak aktif ({{ $opdTidakAktif->count() }})</div>
                     <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
@@ -243,6 +246,7 @@
                         </tbody>
                     </table>
                 </div>
+                @endif
             </div>
 
             {{-- Tanda tangan --}}
